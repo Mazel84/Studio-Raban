@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+    <meta content="yes" name="apple-mobile-web-app-capable"/>
+    <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+    <meta content="#000000" name="theme-color"/>
+    <title>Studio Raban Manager 6.6 (Refactored)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet"/>
+    <style>
+        /* --- CORE VARIABLES --- */
+        :root {
+            --bg-base: #000000;
+            --brand-color: #AC32E4;
+            --ios-gray: #1C1C1E;
+            --ios-green: #30D158;
+            --ios-red: #FF453A;
+            --ios-yellow: #FFD60A;
+            --ios-blue: #0A84FF;
+            --ios-indigo: #5E5CE6;
+            --glass-thick: rgba(28, 28, 30, 0.85);
+            --border-light: rgba(255, 255, 255, 0.15);
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(235, 235, 245, 0.6);
+            --safe-area-top: env(safe-area-inset-top, 20px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+        }
+
+        /* --- RESET & BASE --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Roboto, sans-serif; }
+        
+        body {
+            background-color: var(--bg-base); color: var(--text-primary);
+            min-height: 100vh; min-height: 100dvh;
+            overflow-x: hidden; font-size: 16px;
+            background-image: radial-gradient(at 0% 0%, hsla(280, 50%, 10%, 1) 0, transparent 50%), radial-gradient(at 100% 100%, hsla(260, 40%, 15%, 1) 0, transparent 50%);
+            background-attachment: fixed; background-size: cover;
+            overscroll-behavior-y: none; -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- LAYOUT UTILS --- */
+        .app-container {
+            width: 100%; max-width: 800px; margin: 0 auto;
+            padding: calc(10px + var(--safe-area-top)) 16px calc(90px + var(--safe-area-bottom)) 16px;
+            min-height: 100vh; min-height: 100dvh; position: relative; z-index: 2;
+        }
+        .hidden { display: none !important; }
+
+        /* --- COMPONENTS: CARDS & TYPOGRAPHY --- */
+        .card {
+            background: var(--glass-thick);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-light); border-radius: 20px; padding: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3); margin-bottom: 20px; width: 100%;
+            transform: translateZ(0);
+        }
+        
+        h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }
+        h2 { font-size: 20px; font-weight: 600; margin-bottom: 16px; letter-spacing: -0.3px; }
+        h3 { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; letter-spacing: 0.5px;}
+
+        /* --- COMPONENTS: HEADER & NAVIGATION --- */
+        .view-header { display: flex; align-items: center; margin-bottom: 20px; height: 44px; }
+        .btn-back {
+            background: rgba(255,255,255,0.1); border: none; color: white;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-right: 15px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-back:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
+        .header-title { font-size: 22px; font-weight: 700; margin: 0; flex: 1; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: rgba(20,20,20,0.9);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-top: 1px solid var(--border-light); display: flex; justify-content: space-around;
+            padding: 10px 0 calc(10px + var(--safe-area-bottom)) 0; z-index: 100;
+            transform: translateZ(0);
+        }
+        .nav-item { display: flex; flex-direction: column; align-items: center; opacity: 0.5; font-size: 10px; gap: 4px; border: none; background: none; color: white; cursor: pointer; position: relative; transition: opacity 0.2s; min-width: 60px;}
+        .nav-item:active { transform: scale(0.95); }
+        .nav-item.active { opacity: 1; color: var(--brand-color); }
+        .nav-icon { font-size: 24px; margin-bottom: 2px; }
+
+        /* --- COMPONENTS: INPUTS & FORMS --- */
+        .input-group { margin-bottom: 16px; }
+        .input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 13px; margin-left: 4px; text-align: left;}
+        
+        .input-field {
+            width: 100%; background: rgba(120, 120, 128, 0.15); border: 1px solid rgba(255,255,255,0.05); color: white;
+            padding: 14px; border-radius: 12px; font-size: 16px; outline: none; transition: background 0.2s, border 0.2s;
+            -webkit-appearance: none;
+        }
+        textarea.input-field { min-height: 80px; resize: none; line-height: 1.4; }
+        .input-field:focus { background: rgba(120, 120, 128, 0.25); border-color: var(--brand-color); }
+        .input-field:disabled, .input-field[readonly] { opacity: 0.6; background: rgba(80, 80, 80, 0.1); border-color: transparent; color: #aaa; cursor: not-allowed; }
+        .input-clickable { cursor: pointer; display: flex; align-items: center; justify-content: space-between; } 
+
+        /* --- COMPONENTS: BUTTONS --- */
+        .btn { width: 100%; padding: 16px; border-radius: 14px; border: none; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; touch-action: manipulation; }
+        .btn:active { transform: scale(0.96); opacity: 0.9; }
+        .btn-primary { background: var(--brand-color); color: white; box-shadow: 0 4px 15px rgba(172, 50, 228, 0.3); }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-approve { background: var(--ios-indigo); color: white; box-shadow: 0 4px 15px rgba(94, 92, 230, 0.3); }
+        .btn-reject { background: rgba(255,69,58,0.15); color: var(--ios-red); border: 1px solid rgba(255,69,58,0.3); }
+        .btn-sm { padding: 10px 16px; font-size: 13px; width: auto; border-radius: 10px; min-width: 80px; }
+        .btn-add-crew { background: rgba(255,255,255,0.05); color: var(--brand-color); border: 1px dashed var(--border-light); margin-top: 10px; font-size: 14px; padding: 12px;}
+        .btn-remove-row { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,69,58,0.15); color: var(--ios-red); border: none; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+
+        /* --- DOMAIN: LOGISTICS & CREW --- */
+        .crew-row-item { display: grid; grid-template-columns: 1fr 1.2fr 40px; gap: 8px; margin-bottom: 10px; align-items: center; width: 100%; }
+        .logistics-row { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .logistics-check { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
+        .logistics-check input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--brand-color); }
+
+        /* --- DOMAIN: STATUS BADGES --- */
+        .status-badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; display: inline-block; margin-right: 5px; white-space: nowrap; letter-spacing: 0.5px; }
+        .status-pending_approval { background: rgba(255, 214, 10, 0.2); color: var(--ios-yellow); border: 1px solid rgba(255, 214, 10, 0.3); }
+        .status-approved_concept { background: rgba(94, 92, 230, 0.2); color: var(--ios-indigo); border: 1px solid rgba(94, 92, 230, 0.3); } 
+        .status-production_ready { background: rgba(48, 209, 88, 0.2); color: var(--ios-green); border: 1px solid rgba(48, 209, 88, 0.3); }
+        .status-rejected { background: rgba(255, 69, 58, 0.15); color: var(--ios-red); border: 1px solid rgba(255, 69, 58, 0.3); } 
+
+        /* --- DOMAIN: DASHBOARD --- */
+        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .dash-card { background: rgba(44, 44, 46, 0.7); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.2s; position: relative;}
+        .dash-card:active { transform: scale(0.97); background: rgba(60, 60, 64, 0.8); }
+        
+        .role-switch { display: flex; background: rgba(120,120,128,0.2); padding: 4px; border-radius: 10px; margin-bottom: 16px; flex-wrap: wrap;}
+        .role-opt { flex: 1; padding: 10px; text-align: center; font-size: 13px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; min-width: 60px; transition: 0.2s;}
+        .role-opt.active { background: rgba(60,60,60,0.9); color: white; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+
+        .season-item { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid transparent; }
+        .season-item.active-season { border-color: var(--brand-color); background: rgba(172, 50, 228, 0.1); }
+
+        /* --- MODALS --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+            display: flex; align-items: flex-end; justify-content: center; will-change: opacity;
+        }
+        #modal-selector { z-index: 2200 !important; }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        
+        .modal-content {
+            background: #1C1C1E; width: 100%; max-width: 600px;
+            border-top-left-radius: 24px; border-top-right-radius: 24px;
+            padding: 24px; padding-bottom: calc(24px + var(--safe-area-bottom));
+            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            border-top: 1px solid var(--border-light); max-height: 90dvh; overflow-y: auto;
+            will-change: transform; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        }
+        .modal-overlay.open .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+
+        /* --- CALENDAR --- */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
+        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; border-radius: 50%; cursor: pointer; transition: 0.1s; }
+        .cal-day:hover { background: rgba(255,255,255,0.1); }
+        .cal-day.selected { background: var(--brand-color); color: white; font-weight: 700; }
+        
+        /* --- UTILS: PROGRESS, TOASTS, LOADER --- */
+        .selector-item { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 16px; cursor: pointer; display: flex; justify-content: space-between; transition: background 0.2s;}
+        .selector-item:last-child { border-bottom: none; }
+        .selector-item:active { background: rgba(255,255,255,0.1); }
+
+        .progress-container { background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .progress-bar { height: 100%; background: var(--ios-green); transition: width 0.5s ease; }
+        .episode-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 10px; margin-top: 15px; }
+        .episode-cell { background: rgba(255,255,255,0.05); border-radius: 10px; padding: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.05); font-size: 11px; }
+
+        #loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.3s; pointer-events: none; opacity: 1;}
+        #loader.hidden { opacity: 0; }
+        .spinner { width: 40px; height: 40px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0%, var(--brand-color) 100%); animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; max-width: 350px; pointer-events: none; }
+        .toast { background: rgba(40, 40, 40, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--border-light); color: white; padding: 12px 18px; border-radius: 25px; text-align: center; font-size: 14px; margin-bottom: 10px; pointer-events: auto; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+        .sap-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
+        .sap-table th { text-align: left; padding: 8px; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sap-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .sap-input { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px; border-radius: 6px; width: 100%; font-size: 12px; }
+        .sap-input:focus { border-color: var(--brand-color); outline: none; }
+        .sap-input:disabled { opacity: 0.3; border-color: transparent; }
+
+        .month-header { font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-top: 24px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; }
+        .month-header::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1); margin-left: 10px; }
+    </style>
+</head>
+<body>
+<div id="loader">
+    <div class="spinner"></div>
+    <div style="font-weight: 600; letter-spacing: 1px;">STUDIO RABAN</div>
+    <div style="margin-top:10px; font-size:12px; color:#888;">Ładowanie systemu...</div>
+</div>
+
+<div id="toast-container"></div>
+
+<div class="modal-overlay" id="modal-calendar">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Wybierz datę</span>
+            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-calendar')">Anuluj</button>
+        </div>
+        <div class="cal-header">
+            <span id="cal-month-year" style="font-weight:600; font-size:16px;">Miesiąc Rok</span>
+        </div>
+        <div class="cal-grid" id="cal-days-container"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-selector">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title" id="selector-title">Wybierz opcję</span>
+            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-selector')">Anuluj</button>
+        </div>
+        <div id="selector-list"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-decision">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title">Decyzja Paxa</span>
+            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-decision')">Anuluj</button>
+        </div>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">Dodaj komentarz (wymagane przy odrzuceniu):</p>
+        <div class="input-group">
+            <textarea class="input-field" id="decision-comment" placeholder="Wpisz tutaj swoje uwagi..." style="border:1px solid var(--ios-indigo);"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="window.App.submitPaxDecision()">Zatwierdź Decyzję</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modal-cost">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span class="modal-title" id="cost-modal-title">Dodaj Koszt Dodatkowy</span>
+            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-cost')">Anuluj</button>
+        </div>
+        <form onsubmit="event.preventDefault();">
+            <input type="hidden" id="cost-id">
+            <div class="input-group">
+                <label>Nazwa Kosztu</label>
+                <input class="input-field" id="cost-title" placeholder="np. Dodatkowy Montaż" required type="text">
+            </div>
+            <div class="input-group">
+                <label>Kwota (PLN)</label>
+                <input class="input-field" id="cost-amount" placeholder="0" required type="number">
+            </div>
+            <div class="input-group">
+                <label>Przypisz do Odcinka (Opcjonalnie)</label>
+                <div class="input-field input-clickable" id="cost-episode-display" onclick="window.Selector.openEpisodes('cost-episode-input', 'cost-episode-display')">
+                    Nie wybrano
+                </div>
+                <input type="hidden" id="cost-episode-input">
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button type="button" id="btn-delete-cost" class="btn btn-reject hidden" style="width: auto;" onclick="window.App.deleteCost()">Usuń</button>
+                <button type="button" onclick="window.App.saveExtraCost()" class="btn btn-primary" style="flex:1;">Zapisz</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="app-container hidden" id="view-login">
+    <div style="height: 10vh;"></div>
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="font-size: 50px; margin-bottom: 10px;">🎥</div>
+        <h1>Studio Raban</h1>
+        <p style="color: var(--text-secondary);">Manager Produkcji</p>
+    </div>
+    <div class="card">
+        <h2 id="auth-title">Logowanie</h2>
+        <div id="login-fields">
+            <div class="input-group">
+                <label>Email</label>
+                <input class="input-field" id="login-email" placeholder="Twój E-mail" type="email"/>
+            </div>
+            <div class="input-group">
+                <label>Hasło</label>
+                <input class="input-field" id="login-pass" placeholder="Twoje Hasło" type="password"/>
+            </div>
+        </div>
+        <div class="hidden" id="register-fields">
+            <div class="input-group">
+                <label>Email</label>
+                <input class="input-field" id="reg-email" placeholder="Twój E-mail" type="email"/>
+            </div>
+            <div class="input-group">
+                <label>Hasło (min. 6 znaków)</label>
+                <input class="input-field" id="reg-pass" placeholder="Ustaw Hasło" type="password"/>
+            </div>
+            <div class="input-group">
+                <label>Imię i Nazwisko</label>
+                <input class="input-field" id="reg-name" placeholder="Imię i Nazwisko" type="text"/>
+            </div>
+            <div style="margin-bottom: 10px; font-size: 13px; color: var(--text-secondary); margin-left: 4px;">Wybierz Rolę:</div>
+            <div class="role-switch">
+                <div class="role-opt active" onclick="window.Auth.setRole('reporter', this)">Reporter</div>
+                <div class="role-opt" onclick="window.Auth.setRole('pax', this)">pax</div>
+                <div class="role-opt" onclick="window.Auth.setRole('production', this)">Produkcja</div>
+                <div class="role-opt" onclick="window.Auth.setRole('producer', this)">Producent</div>
+            </div>
+        </div>
+        <button class="btn btn-primary" id="btn-auth-action" onclick="window.Auth.process()">Zaloguj się</button>
+        <div style="margin-top: 20px; text-align: center;">
+            <span id="auth-toggle-text" style="font-size: 14px; color: var(--text-secondary);">Pierwszy raz tutaj?</span>
+            <span id="auth-toggle-link" onclick="window.Auth.toggleMode()" style="font-size: 14px; color: var(--brand-color); font-weight: 600; cursor: pointer; margin-left: 5px;">Zarejestruj się</span>
+        </div>
+    </div>
+</div>
+
+<div class="hidden" id="app-wrapper">
+    <div class="bottom-nav">
+        <button class="nav-item active" id="nav-dashboard" onclick="window.Router.go('dashboard')"><span class="material-symbols-outlined nav-icon">home</span><span>Pulpit</span></button>
+        <button class="nav-item" id="nav-list" onclick="window.Router.go('list')"><span class="material-symbols-outlined nav-icon">view_agenda</span><span>Zlecenia</span></button>
+        <button class="nav-item hidden" id="nav-finances" onclick="window.Router.go('finances')"><span class="material-symbols-outlined nav-icon">pie_chart</span><span>Budżet</span></button>
+        <button class="nav-item hidden" id="nav-settings" onclick="window.Router.go('settings')"><span class="material-symbols-outlined nav-icon">settings</span><span>Opcje</span></button>
+        <button class="nav-item" onclick="window.Auth.logout()"><span class="material-symbols-outlined nav-icon">logout</span><span>Wyloguj</span></button>
+    </div>
+
+    <div class="app-container hidden" id="view-dashboard">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div>
+                <h3 style="margin:0; color: var(--brand-color);">Dzień dobry</h3>
+                <h1 id="user-name-display">Użytkowniku</h1>
+                <div id="user-role-badge" style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Rola</div>
+            </div>
+            <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <span class="material-symbols-outlined">person</span>
+            </div>
+        </div>
+
+        <div id="admin-switcher" class="card hidden" style="border-color: var(--ios-red);">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <span class="material-symbols-outlined" style="color:var(--ios-red)">admin_panel_settings</span>
+                <span style="font-weight:700; font-size:14px; color:var(--ios-red)">PANEL ADMINISTRATORA</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Podgląd roli:</p>
+            <div class="role-switch">
+                <div class="role-opt" onclick="window.App.adminSwitchRole('reporter')">Reporter</div>
+                <div class="role-opt" onclick="window.App.adminSwitchRole('pax')">Pax</div>
+                <div class="role-opt" onclick="window.App.adminSwitchRole('production')">Produkcja</div>
+                <div class="role-opt" onclick="window.App.adminSwitchRole('producer')">Magda</div>
+            </div>
+        </div>
+
+        <div style="background: rgba(172, 50, 228, 0.1); border: 1px solid var(--brand-color); border-radius: 12px; padding: 10px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span class="material-symbols-outlined" style="color:var(--brand-color)">calendar_month</span>
+            <div style="font-size: 13px;">
+                <div style="text-transform: uppercase; color: var(--text-secondary); font-size: 10px; font-weight: 700;">Aktywny Sezon</div>
+                <div id="active-season-label" style="font-weight: 700;">Ładowanie...</div>
+            </div>
+        </div>
+
+        <div class="hidden" id="mgmt-dashboard">
+            <div class="dash-grid">
+                <div class="dash-card" onclick="window.Router.go('list')">
+                    <span class="material-symbols-outlined dash-icon" style="color:var(--ios-yellow)">pending_actions</span>
+                    <div class="dash-count"><span id="count-pending">0</span> nowych</div>
+                </div>
+                <div class="dash-card hidden" id="dash-card-finance" onclick="window.Router.go('finances')">
+                    <span class="material-symbols-outlined dash-icon" style="color:var(--ios-green)">savings</span>
+                    <div class="dash-count">Budżet</div>
+                </div>
+            </div>
+            <h2>Ostatnie Aktywności</h2>
+            <div id="recent-jobs-container" style="font-size: 13px; color: #888;"></div>
+        </div>
+        <div class="hidden" id="reporter-dashboard">
+            <div class="card" style="text-align: center; border-color: var(--brand-color); background: rgba(172, 50, 228, 0.1);">
+                <div style="font-size: 40px; margin-bottom: 10px;">📹</div>
+                <h2>Masz temat?</h2>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Zgłoś temat do akceptacji PAXa.</p>
+                <button class="btn btn-primary" onclick="window.App.openNewOrder()">Nowe Zlecenie +</button>
+            </div>
+            <h2>Moje Tematy</h2>
+            <div id="my-jobs-container"></div>
+        </div>
+    </div>
+
+    <div class="app-container hidden" id="view-list">
+        <div class="view-header">
+            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <h2 class="header-title">Zlecenia</h2>
+            <button class="btn btn-primary btn-sm hidden" id="btn-add-list" onclick="window.App.openNewOrder()" style="margin-left: auto;">+ Dodaj</button>
+        </div>
+        <div class="input-group">
+            <input class="input-field" id="search-jobs" onkeyup="window.App.renderList()" placeholder="Szukaj..." type="text"/>
+        </div>
+        <div id="jobs-list-container"></div>
+    </div>
+
+    <div class="app-container hidden" id="view-order">
+        <div class="view-header">
+            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <h2 class="header-title">Szczegóły</h2>
+        </div>
+        <form id="order-form" onsubmit="event.preventDefault(); window.App.saveJobFromForm();">
+            <div class="card">
+                <h3>Informacje</h3>
+                <div class="input-group">
+                    <label>Tytuł Felietonu</label>
+                    <input class="input-field" id="job-title" placeholder="np. Sonda o cenach paliwa" required type="text"/>
+                </div>
+                <div class="input-group">
+                    <label>Data Realizacji</label>
+                    <div class="input-field input-clickable" id="job-date-trigger" onclick="window.Calendar.open()">
+                        <span id="job-date-display" style="color: var(--text-secondary);">Wybierz datę...</span>
+                        <span class="material-symbols-outlined" style="font-size:20px; color: var(--brand-color);">calendar_today</span>
+                    </div>
+                    <input id="job-date" required type="hidden"/>
+                </div>
+                <div class="input-group">
+                    <label>Lokalizacja (Adres)</label>
+                    <input class="input-field" id="job-location" placeholder="np. Warszawa, Wiejska 10" type="text"/>
+                </div>
+                <div class="input-group" id="group-desc">
+                    <label>Opis Tematu</label>
+                    <textarea class="input-field" id="job-desc" placeholder="Krótko: O czym to jest? Kogo nagrywamy?"></textarea>
+                </div>
+                <div class="input-group" id="group-pax-comment">
+                    <label style="color:var(--ios-indigo);">Komentarz PAXa</label>
+                    <textarea class="input-field" id="job-pax-comment" placeholder="Uwagi do tematu..." style="border-color:var(--ios-indigo);"></textarea>
+                </div>
+                <div class="input-group hidden" id="group-job-cost">
+                    <label style="color:var(--ios-green);">Całkowity Koszt Zlecenia (PLN)</label>
+                    <input class="input-field" id="job-manual-cost" type="number" placeholder="Suma kosztów (opcjonalnie)" style="border-color:var(--ios-green);">
+                    <div style="font-size:10px; color:#666; margin-top:4px;">Wpisanie kwoty tutaj nadpisze sumę z ekipy i logistyki.</div>
+                </div>
+                <div class="input-group hidden" id="group-episode">
+                    <label>Odcinek (Przypisz)</label>
+                    <div class="input-field input-clickable" onclick="window.Selector.openEpisodes('job-episode', 'job-episode-display')">
+                        <span id="job-episode-display" style="color: var(--text-secondary);">Nie wybrano</span>
+                        <span class="material-symbols-outlined" style="font-size:20px;">arrow_drop_down</span>
+                    </div>
+                    <input id="job-episode" type="hidden"/>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Logistyka (Dla Produkcji)</h3>
+                <div class="logistics-row">
+                    <label class="logistics-check">
+                        <input type="checkbox" id="check-hotel" onchange="window.App.toggleLogistics('hotel')">
+                        <span class="material-symbols-outlined" style="font-size:18px;">hotel</span> Hotel / Nocleg
+                    </label>
+                    <div id="wrap-hotel" class="hidden">
+                        <input type="text" id="desc-hotel" class="input-field" placeholder="Szczegóły" style="font-size:13px; margin-bottom:5px;">
+                        <div class="prod-only hidden" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
+                            <label style="font-size:11px; color:var(--ios-green);">Koszt:</label>
+                            <input type="number" id="cost-hotel" class="input-field" placeholder="PLN" style="padding:8px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="logistics-row">
+                    <label class="logistics-check">
+                        <input type="checkbox" id="check-transport" onchange="window.App.toggleLogistics('transport')">
+                        <span class="material-symbols-outlined" style="font-size:18px;">train</span> Transport
+                    </label>
+                    <div id="wrap-transport" class="hidden">
+                        <input type="text" id="desc-transport" class="input-field" placeholder="Szczegóły" style="font-size:13px; margin-bottom:5px;">
+                        <div class="prod-only hidden" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
+                            <label style="font-size:11px; color:var(--ios-green);">Koszt:</label>
+                            <input type="number" id="cost-transport" class="input-field" placeholder="PLN" style="padding:8px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Ekipa</h3>
+                <div id="crew-list"></div>
+                <button class="btn btn-add-crew" onclick="window.App.addCrewRow()" type="button">+ Dodaj osobę</button>
+            </div>
+            <button class="btn btn-primary" type="submit">Zapisz / Wyślij</button>
+        </form>
+    </div>
+
+    <div class="app-container hidden" id="view-finances">
+        <div class="view-header">
+            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <h2 class="header-title">Budżet</h2>
+            <button class="btn btn-sm btn-secondary" onclick="window.App.openEditCost()">+ Koszt</button>
+        </div>
+        <div class="card">
+            <h3>Sezon: <span id="finance-season-name" style="color:var(--brand-color)"></span></h3>
+            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
+                <span id="season-spent" style="font-size:24px; font-weight:700;">0 PLN</span>
+                <span style="color:var(--text-secondary); font-size:12px;">z puli <span id="season-total">0</span></span>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="season-progress" style="width: 0%"></div>
+            </div>
+            <div style="margin-top:8px; font-size:12px; color:var(--text-secondary); text-align:right;">
+                Pozostało: <span id="season-remaining" style="color:white; font-weight:600;">0 PLN</span>
+            </div>
+        </div>
+        <h3 style="margin-left: 4px; color:var(--text-secondary);">STATUS ODCINKÓW</h3>
+        <div class="episode-grid" id="episodes-grid"></div>
+        <div class="card" style="margin-top: 30px;">
+            <h3>Ostatnie Wydatki</h3>
+            <div id="finance-list" style="font-size:13px;"></div>
+        </div>
+    </div>
+
+    <div class="app-container hidden" id="view-settings">
+        <div class="view-header">
+            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
+            <h2 class="header-title">Opcje</h2>
+        </div>
+        
+        <div class="card" style="border-color:var(--brand-color);">
+            <h3>Aktywny Sezon (Edycja)</h3>
+            <form onsubmit="event.preventDefault(); window.App.updateActiveSeason();">
+                <div class="input-group"><label>Nazwa</label><input class="input-field" id="edit-season-name" required></div>
+                <div class="input-group"><label>Budżet (PLN)</label><input class="input-field" id="edit-season-budget" type="number" required></div>
+                <div class="input-group"><label>Odcinków</label><input class="input-field" id="edit-season-episodes" type="number" required></div>
+                <button class="btn btn-primary" type="submit">Zapisz Zmiany</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Manager Odcinków</h3>
+            <div style="overflow-x:auto;">
+                <table class="sap-table">
+                    <thead><tr><th style="width:30px">#</th><th>ID</th><th>SAP E</th><th>SAP P</th></tr></thead>
+                    <tbody id="episodes-meta-list"></tbody>
+                </table>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="window.App.saveEpisodeMeta()">Zapisz SAP/ID</button>
+        </div>
+
+        <div class="card" style="margin-top:30px; border-top: 1px dashed rgba(255,255,255,0.2);">
+            <h3>Nowy Sezon</h3>
+            <form onsubmit="event.preventDefault(); window.App.addSeason();">
+                <div class="input-group"><input class="input-field" id="new-season-name" placeholder="Nazwa" required></div>
+                <div style="display:flex; gap:10px;">
+                    <div class="input-group" style="flex:1"><input class="input-field" id="new-season-budget" type="number" placeholder="Budżet" required></div>
+                    <div class="input-group" style="flex:1"><input class="input-field" id="new-season-episodes" type="number" placeholder="Odcinki" required></div>
+                </div>
+                <button class="btn btn-secondary" type="submit">Utwórz</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Lista Sezonów</h3>
+            <div id="seasons-list"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /**
+     * STUDIO RABAN MANAGER - CORE SYSTEM v6.7
+     * Architecture: Namespace-based SPA with Firebase Backend.
+     */
+
+    // --- UTILITIES ---
+    const Utils = {
+        escape: (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        },
+        generateId: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
+        formatDate: (dateStr) => {
+            if (!dateStr) return 'Brak daty';
+            const date = new Date(dateStr);
+            return isNaN(date.getTime()) ? dateStr : date.toLocaleDateString('pl-PL');
+        },
+        getMonthYear: (dateStr) => {
+            if (!dateStr) return 'Inne';
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return 'Inne';
+            const months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
+            return `${months[date.getMonth()]} ${date.getFullYear()}`;
+        },
+        safeNumber: (val) => {
+            const num = parseFloat(val);
+            return isNaN(num) ? 0 : num;
+        }
+    };
+
+    const Logger = {
+        info: (msg) => console.log(`[INFO] ${msg}`),
+        error: (msg, e) => {
+            console.error(`[ERROR] ${msg}`, e);
+            window.UI?.toast(`Błąd: ${msg}`, 'error');
+        }
+    };
+
+    // --- DOM ABSTRACTION ---
+    const SafeDOM = {
+        get: (id) => document.getElementById(id),
+        val: (id, v) => {
+            const el = document.getElementById(id);
+            if (!el) return '';
+            if (v !== undefined) el.value = v;
+            return el.value;
+        },
+        text: (id, t) => { const el = document.getElementById(id); if (el) el.innerText = t; },
+        html: (id, h) => { const el = document.getElementById(id); if (el) el.innerHTML = h; },
+        style: (id, p, v) => { const el = document.getElementById(id); if (el) el.style[p] = v; },
+        toggleHidden: (id, hide) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', hide); },
+        isChecked: (id) => { const el = document.getElementById(id); return el ? el.checked : false; },
+        setChecked: (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; }
+    };
+
+    // --- STATE MANAGEMENT ---
+    const State = {
+        user: null,
+        activeSeasonId: null,
+        impersonatedRole: null,
+        data: { jobs: [], seasons: [], extraCosts: [], users: [] },
+        
+        getCurrentRole: () => State.impersonatedRole || (State.user ? State.user.role : 'reporter'),
+        getActiveSeason: () => State.data.seasons.find(s => s.id === State.activeSeasonId) || State.data.seasons[0],
+        getFilteredJobs: () => {
+            const sId = State.activeSeasonId;
+            let jobs = State.data.jobs;
+            if (sId) jobs = jobs.filter(j => j.seasonId === sId);
+            return jobs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+    };
+
+    // --- DATA SERVICE (FIREBASE WRAPPER) ---
+    const DataService = {
+        fs: () => window.Services,
+        
+        initListeners: () => {
+            const subscribe = (col, key) => {
+                const fs = DataService.fs();
+                try {
+                    const ref = fs.collection(fs.db, 'artifacts', fs.appId, 'public', 'data', col);
+                    fs.onSnapshot(ref, (snap) => {
+                        State.data[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                        if (col === 'seasons' && !State.activeSeasonId && State.data.seasons.length > 0) {
+                            State.activeSeasonId = State.data.seasons[0].id;
+                        }
+                        if (State.user) window.App.renderAll();
+                    }, (err) => Logger.error(`Listener ${col}`, err));
+                } catch (e) { Logger.error(`Init ${col}`, e); }
+            };
+            
+            subscribe('users', 'users');
+            subscribe('jobs', 'jobs');
+            subscribe('costs', 'extraCosts');
+            subscribe('seasons', 'seasons');
+        },
+
+        saveDoc: async (collectionName, data, id = null) => {
+            try {
+                const fs = DataService.fs();
+                const finalId = id || Utils.generateId();
+                const docRef = fs.doc(fs.db, 'artifacts', fs.appId, 'public', 'data', collectionName, finalId);
+                await fs.setDoc(docRef, { ...data, id: finalId }, { merge: true });
+                return finalId;
+            } catch (e) { throw new Error(e.message); }
+        },
+
+        deleteDoc: async (collectionName, id) => {
+            try {
+                const fs = DataService.fs();
+                await fs.deleteDoc(fs.doc(fs.db, 'artifacts', fs.appId, 'public', 'data', collectionName, id));
+            } catch (e) { throw new Error(e.message); }
+        },
+
+        fetchUser: async (email) => {
+            if (!email) return null;
+            try {
+                const fs = DataService.fs();
+                const q = fs.query(
+                    fs.collection(fs.db, 'artifacts', fs.appId, 'public', 'data', 'users'),
+                    fs.where("email", "==", email)
+                );
+                const snap = await fs.getDocs(q);
+                return snap.empty ? null : { email, ...snap.docs[0].data() };
+            } catch (e) { Logger.error("Fetch User", e); return null; }
+        }
+    };
+
+    // --- UI CONTROLLER ---
+    window.UI = {
+        openModal: (id) => SafeDOM.get(id)?.classList.add('open'),
+        closeModal: (id) => SafeDOM.get(id)?.classList.remove('open'),
+        toggleLoader: (show) => SafeDOM.toggleHidden('loader', !show),
+        
+        toast: (msg, type = 'normal') => {
+            const container = SafeDOM.get('toast-container');
+            if (!container) return;
+            const el = document.createElement('div');
+            el.className = 'toast';
+            el.innerText = msg;
+            if (type === 'error') el.style.border = '1px solid var(--ios-red)';
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 3500);
+        },
+
+        renderJobCard: (job) => {
+            const role = State.getCurrentRole();
+            const isSup = role === 'pax';
+            const isEditable = ['production', 'admin', 'producer', 'reporter'].includes(role);
+            
+            let totalCost = 0;
+            if (job.manualCost && parseFloat(job.manualCost) > 0) {
+                totalCost = Utils.safeNumber(job.manualCost);
+            } else {
+                totalCost = (job.crew || []).reduce((acc, c) => acc + Utils.safeNumber(c.cost), 0);
+                if (job.logistics) {
+                    totalCost += Utils.safeNumber(job.logistics.hotel?.cost);
+                    totalCost += Utils.safeNumber(job.logistics.transport?.cost);
+                }
+            }
+
+            const statusConfig = {
+                'pending_approval': { class: 'status-pending_approval', text: 'Czeka na PAX' },
+                'approved_concept': { class: 'status-approved_concept', text: 'Szukanie Ekipy' },
+                'production_ready': { class: 'status-production_ready', text: 'W Realizacji' },
+                'rejected': { class: 'status-rejected', text: 'Odrzucone' }
+            };
+            const status = statusConfig[job.status] || { class: '', text: job.status };
+            
+            let actions = '';
+            if (isSup && job.status === 'pending_approval') {
+                actions = `
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button type="button" onclick="window.App.handlePaxDecision('${job.id}', false)" class="btn btn-sm btn-reject" style="flex:1;">Odrzuć</button>
+                        <button type="button" onclick="window.App.handlePaxDecision('${job.id}', true)" class="btn btn-sm btn-approve" style="flex:1;">Akceptuj</button>
+                    </div>`;
+            } else if (isEditable) {
+                actions = `<button type="button" onclick="window.App.openEditJob('${job.id}')" class="btn btn-sm btn-secondary" style="width:100%; margin-top:10px;">Edytuj</button>`;
+            }
+
+            const crewHtml = (job.crew || []).map(c => `
+                <div style="font-size:12px; color:#aaa; margin-top:2px;">• ${Utils.escape(c.role)} <b>${Utils.escape(c.name)}</b></div>
+            `).join('');
+            
+            const showFinance = ['production', 'admin', 'producer'].includes(role);
+            const costHtml = (showFinance && totalCost > 0) 
+                ? `<span style="font-size:11px; font-weight:700; color:var(--ios-green); background:rgba(48, 209, 88, 0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${totalCost} PLN</span>` 
+                : '';
+
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between;">
+                    <div>
+                        <span class="status-badge ${status.class}">${status.text}</span> 
+                        <span style="font-size:11px; color:#888;">${job.date}</span>
+                        ${costHtml}
+                    </div>
+                </div>
+                <h3 style="margin:8px 0; color:white; font-size:16px; text-transform:none;">${Utils.escape(job.title)}</h3>
+                <div style="font-size:13px; color:#ccc; margin-bottom:8px;">${Utils.escape(job.location)}</div>
+                ${job.paxComment ? `<div style="font-size:12px; color:var(--ios-indigo); margin-bottom:5px;">PAX: ${Utils.escape(job.paxComment)}</div>` : ''}
+                <div style="margin-top:5px;">${crewHtml}</div>
+                ${actions}
+            `;
+            return div;
+        }
+    };
+
+    // --- APPLICATION LOGIC ---
+    window.App = {
+        init: () => {
+            const start = () => {
+                Logger.info('System start');
+                const auth = DataService.fs().auth;
+                DataService.fs().onAuthStateChanged(auth, async (user) => {
+                    UI.toggleLoader(true);
+                    if (user && user.email) {
+                        const userData = await DataService.fetchUser(user.email);
+                        if (userData) {
+                            State.user = userData;
+                            DataService.initListeners();
+                            SafeDOM.toggleHidden('view-login', true);
+                            SafeDOM.toggleHidden('app-wrapper', false);
+                            SafeDOM.text('user-name-display', userData.name || 'Użytkownik');
+                            window.App.updateRoleDisplay();
+                            window.Router.go('dashboard');
+                        } else {
+                            await DataService.fs().signOut(auth);
+                            SafeDOM.toggleHidden('view-login', false);
+                        }
+                    } else {
+                        SafeDOM.toggleHidden('view-login', false);
+                        SafeDOM.toggleHidden('app-wrapper', true);
+                    }
+                    UI.toggleLoader(false);
+                });
+            };
+
+            if (window.Services) start();
+            else window.addEventListener('firebase-ready', start);
+        },
+
+        renderAll: () => {
+            if (!State.user) return;
+            const role = State.getCurrentRole();
+            
+            // Dashboard Visibility
+            const isRep = role === 'reporter';
+            SafeDOM.toggleHidden('reporter-dashboard', !isRep);
+            SafeDOM.toggleHidden('mgmt-dashboard', isRep);
+            SafeDOM.toggleHidden('admin-switcher', State.user.role !== 'admin');
+
+            // Navigation Visibility
+            const canSeeFinance = ['production', 'admin', 'producer'].includes(role);
+            SafeDOM.toggleHidden('nav-finances', !canSeeFinance);
+            SafeDOM.toggleHidden('dash-card-finance', !canSeeFinance);
+            SafeDOM.toggleHidden('nav-settings', !canSeeFinance);
+
+            // Conditional Rendering (Performance)
+            if (!SafeDOM.get('view-dashboard').classList.contains('hidden')) App.renderDashboard();
+            if (!SafeDOM.get('view-list').classList.contains('hidden')) App.renderList();
+            if (!SafeDOM.get('view-finances').classList.contains('hidden') && canSeeFinance) App.renderFinances();
+            if (!SafeDOM.get('view-settings').classList.contains('hidden') && canSeeFinance) App.renderSettings();
+
+            const activeSeason = State.getActiveSeason();
+            if (activeSeason) SafeDOM.text('active-season-label', activeSeason.name);
+        },
+
+        renderDashboard: () => {
+            const jobs = State.getFilteredJobs();
+            SafeDOM.text('count-pending', jobs.filter(j => j.status === 'pending_approval').length);
+            
+            const isRep = State.getCurrentRole() === 'reporter';
+            const displayJobs = (isRep ? jobs.filter(j => j.author === State.user.email) : jobs).slice(0, 5);
+            
+            const container = SafeDOM.get(isRep ? 'my-jobs-container' : 'recent-jobs-container');
+            if (container) {
+                container.innerHTML = '';
+                const frag = document.createDocumentFragment();
+                displayJobs.forEach(j => frag.appendChild(UI.renderJobCard(j)));
+                container.appendChild(frag);
+            }
+        },
+
+        renderList: () => {
+            const container = SafeDOM.get('jobs-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const term = SafeDOM.val('search-jobs').toLowerCase();
+            let jobs = State.getFilteredJobs();
+            if (term) jobs = jobs.filter(j => j.title.toLowerCase().includes(term));
+
+            if (jobs.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">Brak wyników</div>';
+                return;
+            }
+
+            const groups = {};
+            jobs.forEach(j => {
+                const key = j.date.substring(0, 7) || '0000-00';
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(j);
+            });
+
+            const frag = document.createDocumentFragment();
+            Object.keys(groups).sort().reverse().forEach(key => {
+                const header = document.createElement('div');
+                header.className = 'month-header';
+                header.innerText = Utils.getMonthYear(groups[key][0].date);
+                frag.appendChild(header);
+                groups[key].forEach(j => frag.appendChild(UI.renderJobCard(j)));
+            });
+            container.appendChild(frag);
+        },
+
+        renderFinances: () => {
+            const s = State.getActiveSeason();
+            if(!s) return;
+            SafeDOM.text('finance-season-name', s.name);
+
+            let totalSpent = 0;
+            const epCosts = {};
+            const expenseList = [];
+            const budget = Utils.safeNumber(s.budget);
+
+            // Calculate Jobs
+            State.getFilteredJobs().forEach(j => {
+                let cost = (j.manualCost && parseFloat(j.manualCost) > 0) 
+                    ? Utils.safeNumber(j.manualCost) 
+                    : (j.crew||[]).reduce((a,c)=>a+Utils.safeNumber(c.cost),0) + Utils.safeNumber(j.logistics?.hotel?.cost) + Utils.safeNumber(j.logistics?.transport?.cost);
+                
+                if (cost > 0) {
+                    totalSpent += cost;
+                    if(j.episodeId) epCosts[j.episodeId] = (epCosts[j.episodeId] || 0) + cost;
+                    expenseList.push({ type: 'job', id: j.id, title: j.title, desc: j.episodeId ? `Odc. ${j.episodeId}` : 'Nieprzypisane', amount: cost, icon: 'movie' });
+                }
+            });
+
+            // Calculate Extra Costs
+            State.data.extraCosts.filter(c => c.seasonId === s.id).forEach(c => {
+                const amt = Utils.safeNumber(c.amount);
+                totalSpent += amt;
+                if(c.episodeId) epCosts[c.episodeId] = (epCosts[c.episodeId] || 0) + amt;
+                expenseList.push({ type: 'extra', id: c.id, title: c.title, desc: c.episodeId ? `Odc. ${c.episodeId}` : 'Ogólny', amount: amt, icon: 'attach_money' });
+            });
+
+            // UI Updates
+            SafeDOM.text('season-spent', `${totalSpent} PLN`);
+            SafeDOM.text('season-total', `${budget} PLN`);
+            SafeDOM.text('season-remaining', `${budget - totalSpent} PLN`);
+            SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent/budget)*100, 100) : 0}%`);
+
+            // Grid Render
+            const grid = SafeDOM.get('episodes-grid');
+            if(grid) {
+                grid.innerHTML = '';
+                const avg = budget / (s.episodes || 1);
+                const frag = document.createDocumentFragment();
+                for(let i=1; i<=(s.episodes||12); i++) {
+                    const c = epCosts[i] || 0;
+                    const d = document.createElement('div');
+                    d.className = 'episode-cell';
+                    if (c > avg) d.style.borderColor = 'var(--ios-red)';
+                    else if (c > 0) d.style.borderColor = 'var(--ios-green)';
+                    d.innerHTML = `<div style="font-weight:700; color:white;">ODC ${i}</div><div style="color:#ccc">${c}</div>`;
+                    frag.appendChild(d);
+                }
+                grid.appendChild(frag);
+            }
+
+            // Expense List
+            const listContainer = SafeDOM.get('finance-list');
+            if (listContainer) {
+                listContainer.innerHTML = '';
+                const frag = document.createDocumentFragment();
+                expenseList.reverse().slice(0, 15).forEach(ex => {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);';
+                    if(ex.type === 'extra') { row.style.cursor = 'pointer'; row.onclick = () => App.openEditCost(ex.id); }
+                    row.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div style="background:rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                                <span class="material-symbols-outlined" style="font-size:18px; color:var(--text-secondary)">${ex.icon}</span>
+                            </div>
+                            <div>
+                                <div style="font-weight:600; font-size:13px;">${Utils.escape(ex.title)} ${ex.type==='extra'?'<span style="font-size:10px; color:var(--brand-color)">✎</span>':''}</div>
+                                <div style="font-size:11px; color:var(--text-secondary)">${ex.desc}</div>
+                            </div>
+                        </div>
+                        <div style="font-weight:700; color:var(--ios-green); font-size:13px;">${ex.amount} PLN</div>`;
+                    frag.appendChild(row);
+                });
+                listContainer.appendChild(frag);
+            }
+        },
+
+        renderSettings: () => {
+            const s = State.getActiveSeason();
+            if(!s) return;
+            SafeDOM.val('edit-season-name', s.name);
+            SafeDOM.val('edit-season-budget', s.budget);
+            SafeDOM.val('edit-season-episodes', s.episodes);
+
+            const tbody = SafeDOM.get('episodes-meta-list');
+            if(tbody) {
+                tbody.innerHTML = '';
+                const frag = document.createDocumentFragment();
+                for(let i=1; i<=(s.episodes||0); i++) {
+                    const m = (s.episodesData||{})[i] || {};
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${i}</td>
+                        <td><input class="sap-input ep-id" data-ep="${i}" value="${Utils.escape(m.id)}"></td>
+                        <td><input class="sap-input ep-sape" data-ep="${i}" value="${Utils.escape(m.sapE)}"></td>
+                        <td><input class="sap-input ep-sapp" data-ep="${i}" value="${Utils.escape(m.sapP)}"></td>`;
+                    frag.appendChild(tr);
+                }
+                tbody.appendChild(frag);
+            }
+
+            const slist = SafeDOM.get('seasons-list');
+            if(slist) {
+                slist.innerHTML = '';
+                State.data.seasons.forEach(ss => {
+                    const div = document.createElement('div');
+                    div.className = `season-item ${ss.id === State.activeSeasonId ? 'active-season' : ''}`;
+                    div.innerHTML = `<div><b>${Utils.escape(ss.name)}</b></div><button class="btn-sm btn-secondary" onclick="window.App.activateSeason('${ss.id}')">Aktywuj</button>`;
+                    slist.appendChild(div);
+                });
+            }
+        },
+
+        // --- ACTIONS ---
+        openNewOrder: () => {
+            SafeDOM.get('order-form').reset();
+            delete SafeDOM.get('order-form').dataset.id;
+            SafeDOM.get('btn-delete-job')?.remove();
+            SafeDOM.get('btn-confirm-crew')?.remove();
+            SafeDOM.html('crew-list', '');
+            
+            const role = State.getCurrentRole();
+            SafeDOM.toggleHidden('group-pax-comment', !['pax', 'admin'].includes(role));
+            const canManageProd = ['production', 'producer', 'admin'].includes(role);
+            SafeDOM.toggleHidden('group-episode', !canManageProd);
+            SafeDOM.toggleHidden('group-job-cost', !canManageProd);
+
+            const today = new Date().toISOString().split('T')[0];
+            SafeDOM.val('job-date', today);
+            SafeDOM.text('job-date-display', today);
+            SafeDOM.text('job-episode-display', 'Nie wybrano');
+            window.Router.go('order');
+        },
+
+        openEditJob: (id) => {
+            const j = State.data.jobs.find(x => x.id === id);
+            if (!j) return;
+            window.Router.go('order');
+            
+            const form = SafeDOM.get('order-form');
+            form.dataset.id = id;
+            SafeDOM.val('job-title', j.title);
+            SafeDOM.val('job-location', j.location);
+            SafeDOM.val('job-desc', j.desc);
+            SafeDOM.val('job-pax-comment', j.paxComment);
+            SafeDOM.val('job-manual-cost', j.manualCost || '');
+            SafeDOM.val('job-date', j.date);
+            SafeDOM.text('job-date-display', j.date);
+            
+            if(j.episodeId) {
+                SafeDOM.val('job-episode', j.episodeId);
+                SafeDOM.text('job-episode-display', "Odcinek " + j.episodeId);
+            } else {
+                SafeDOM.val('job-episode', '');
+                SafeDOM.text('job-episode-display', 'Nie wybrano');
+            }
+
+            SafeDOM.html('crew-list', '');
+            (j.crew || []).forEach(c => App.addCrewRow(c));
+
+            SafeDOM.setChecked('check-hotel', j.logistics?.hotel?.needed || false);
+            SafeDOM.toggleHidden('wrap-hotel', !j.logistics?.hotel?.needed);
+            SafeDOM.val('desc-hotel', j.logistics?.hotel?.details || '');
+            SafeDOM.val('cost-hotel', j.logistics?.hotel?.cost || '');
+
+            SafeDOM.setChecked('check-transport', j.logistics?.transport?.needed || false);
+            SafeDOM.toggleHidden('wrap-transport', !j.logistics?.transport?.needed);
+            SafeDOM.val('desc-transport', j.logistics?.transport?.details || '');
+            SafeDOM.val('cost-transport', j.logistics?.transport?.cost || '');
+
+            const role = State.getCurrentRole();
+            SafeDOM.toggleHidden('group-pax-comment', !['pax', 'admin'].includes(role));
+            SafeDOM.toggleHidden('group-episode', !['production', 'producer', 'admin'].includes(role));
+            SafeDOM.toggleHidden('group-job-cost', !['production', 'producer', 'admin'].includes(role));
+
+            SafeDOM.get('btn-delete-job')?.remove();
+            SafeDOM.get('btn-confirm-crew')?.remove();
+
+            if(['production', 'producer', 'admin'].includes(role)) {
+                if (j.status === 'approved_concept') {
+                    const btn = document.createElement('button');
+                    btn.id = 'btn-confirm-crew';
+                    btn.className = 'btn btn-approve'; 
+                    btn.style.marginTop = '20px';
+                    btn.innerText = 'Zatwierdź Ekipę (Do Realizacji)';
+                    btn.onclick = () => App.confirmCrew(id);
+                    form.appendChild(btn);
+                }
+                const delBtn = document.createElement('button');
+                delBtn.id = 'btn-delete-job';
+                delBtn.className = 'btn btn-reject';
+                delBtn.style.marginTop = '10px';
+                delBtn.innerText = 'Usuń Zlecenie';
+                delBtn.onclick = () => App.deleteJob(id);
+                form.appendChild(delBtn);
+            }
+        },
+
+        saveJobFromForm: async () => {
+            UI.toggleLoader(true);
+            try {
+                const editId = SafeDOM.get('order-form').dataset.id;
+                const crew = [];
+                document.querySelectorAll('.crew-row-item').forEach(r => {
+                    crew.push({
+                        role: r.querySelector('.crew-role').value,
+                        name: r.querySelector('.crew-name').value,
+                        cost: Utils.safeNumber(r.querySelector('.crew-cost')?.value)
+                    });
+                });
+
+                const jobData = {
+                    title: SafeDOM.val('job-title'),
+                    date: SafeDOM.val('job-date'),
+                    location: SafeDOM.val('job-location'),
+                    desc: SafeDOM.val('job-desc'),
+                    paxComment: SafeDOM.val('job-pax-comment'),
+                    episodeId: Utils.safeNumber(SafeDOM.val('job-episode')) || null,
+                    manualCost: Utils.safeNumber(SafeDOM.val('job-manual-cost')) || null,
+                    seasonId: State.activeSeasonId,
+                    author: State.user.email,
+                    status: editId ? (State.data.jobs.find(j=>j.id==editId)||{}).status : 'pending_approval',
+                    crew: crew,
+                    logistics: {
+                        hotel: { needed: SafeDOM.isChecked('check-hotel'), details: SafeDOM.val('desc-hotel'), cost: SafeDOM.val('cost-hotel') },
+                        transport: { needed: SafeDOM.isChecked('check-transport'), details: SafeDOM.val('desc-transport'), cost: SafeDOM.val('cost-transport') }
+                    }
+                };
+
+                await DataService.saveDoc('jobs', jobData, editId);
+                UI.toast('Zapisano');
+                window.Router.back();
+            } catch (e) { Logger.error("Save Job", e); } 
+            finally { UI.toggleLoader(false); }
+        },
+
+        deleteJob: async (id) => {
+            if(!confirm('Czy na pewno chcesz usunąć to zlecenie?')) return;
+            UI.toggleLoader(true);
+            try { await DataService.deleteDoc('jobs', id); UI.toast('Usunięto'); window.Router.back(); }
+            catch(e) { Logger.error("Delete Job", e); } finally { UI.toggleLoader(false); }
+        },
+
+        confirmCrew: async (id) => {
+            if(!confirm('Zlecenie zmieni status na "W Realizacji".')) return;
+            UI.toggleLoader(true);
+            try { await DataService.saveDoc('jobs', { status: 'production_ready' }, id); UI.toast('Zatwierdzono'); window.Router.back(); }
+            catch(e) { Logger.error("Status Change", e); } finally { UI.toggleLoader(false); }
+        },
+
+        handlePaxDecision: (id, isApproved) => {
+            App.tempDecision = { id, isApproved };
+            UI.openModal('modal-decision');
+        },
+
+        submitPaxDecision: async () => {
+            const { id, isApproved } = App.tempDecision;
+            const comment = SafeDOM.val('decision-comment');
+            if (!isApproved && !comment) return UI.toast('Wymagany komentarz przy odrzuceniu!', 'error');
+            
+            try {
+                await DataService.saveDoc('jobs', { status: isApproved ? 'approved_concept' : 'rejected', paxComment: comment }, id);
+                UI.closeModal('modal-decision');
+                UI.toast('Decyzja zapisana');
+            } catch (e) { Logger.error("Decision", e); }
+        },
+
+        toggleLogistics: (type) => SafeDOM.toggleHidden('wrap-' + type, !SafeDOM.isChecked('check-' + type)),
+        
+        addCrewRow: (data = {}) => {
+            const id = Date.now() + Math.random().toString().substr(2, 5);
+            const showCost = ['production', 'producer', 'admin'].includes(State.getCurrentRole());
+            const div = document.createElement('div');
+            div.className = 'crew-row-item';
+            div.innerHTML = `
+                <div class="input-field input-clickable" style="flex:1;" id="rd-${id}" onclick="window.Selector.openRoles('rd-${id}','rv-${id}')">
+                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px;">${data.role||'Rola...'}</span>
+                </div>
+                <input type="hidden" class="crew-role" id="rv-${id}" value="${data.role||''}">
+                <input type="text" class="input-field crew-name" style="flex:1.5;" placeholder="Imię i Nazwisko" value="${data.name||''}">
+                ${showCost ? `<input type="number" class="input-field crew-cost" placeholder="PLN" value="${data.cost||''}" style="width:70px; padding:10px 5px; text-align:center;">` : ''}
+                <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()">×</button>`;
+            SafeDOM.get('crew-list')?.appendChild(div);
+        },
+
+        openEditCost: (id) => {
+            const cost = State.data.extraCosts.find(c => c.id === id);
+            SafeDOM.val('cost-id', cost ? cost.id : '');
+            SafeDOM.val('cost-title', cost ? cost.title : '');
+            SafeDOM.val('cost-amount', cost ? cost.amount : '');
+            SafeDOM.val('cost-episode-input', cost?.episodeId || '');
+            SafeDOM.text('cost-episode-display', cost?.episodeId ? `Odcinek ${cost.episodeId}` : 'Nie wybrano');
+            SafeDOM.text('cost-modal-title', cost ? 'Edytuj Koszt' : 'Dodaj Koszt');
+            SafeDOM.toggleHidden('btn-delete-cost', !cost);
+            UI.openModal('modal-cost');
+        },
+
+        saveExtraCost: async () => {
+            const id = SafeDOM.val('cost-id');
+            const data = {
+                title: SafeDOM.val('cost-title'),
+                amount: Utils.safeNumber(SafeDOM.val('cost-amount')),
+                episodeId: Utils.safeNumber(SafeDOM.val('cost-episode-input')),
+                seasonId: State.activeSeasonId
+            };
+            if(!data.title || !data.amount) return UI.toast('Uzupełnij dane', 'error');
+            await DataService.saveDoc('costs', data, id || null);
+            UI.closeModal('modal-cost');
+            UI.toast('Zapisano');
+        },
+
+        deleteCost: async () => {
+            const id = SafeDOM.val('cost-id');
+            if(!id || !confirm('Usunąć koszt?')) return;
+            await DataService.deleteDoc('costs', id);
+            UI.closeModal('modal-cost');
+            UI.toast('Usunięto');
+        },
+
+        // --- ADMIN & MISC ---
+        adminSwitchRole: (role) => {
+            State.impersonatedRole = role;
+            App.updateRoleDisplay();
+            App.renderAll();
+            UI.toast(`Podgląd: ${role}`);
+        },
+        updateRoleDisplay: () => {
+            const role = State.getCurrentRole();
+            const label = State.user.role === 'admin' && role !== 'admin' ? `${role} (Admin View)` : role;
+            SafeDOM.text('user-role-badge', label.toUpperCase());
+        },
+        activateSeason: (id) => { State.activeSeasonId = id; App.renderAll(); },
+        addSeason: async () => {
+            const data = {
+                name: SafeDOM.val('new-season-name'),
+                budget: Utils.safeNumber(SafeDOM.val('new-season-budget')),
+                episodes: Utils.safeNumber(SafeDOM.val('new-season-episodes'))
+            };
+            await DataService.saveDoc('seasons', data);
+            UI.toast('Dodano sezon');
+        },
+        updateActiveSeason: async () => {
+            const s = State.getActiveSeason();
+            if(!s) return;
+            const data = {
+                ...s,
+                name: SafeDOM.val('edit-season-name'),
+                budget: Utils.safeNumber(SafeDOM.val('edit-season-budget')),
+                episodes: Utils.safeNumber(SafeDOM.val('edit-season-episodes'))
+            };
+            await DataService.saveDoc('seasons', data, s.id);
+            UI.toast('Zaktualizowano');
+        },
+        saveEpisodeMeta: async () => {
+            const s = State.getActiveSeason();
+            const newMeta = {};
+            document.querySelectorAll('.ep-id').forEach(el => {
+                const ep = el.dataset.ep;
+                newMeta[ep] = {
+                    id: el.value,
+                    sapE: document.querySelector(`.ep-sape[data-ep="${ep}"]`).value,
+                    sapP: document.querySelector(`.ep-sapp[data-ep="${ep}"]`).value
+                };
+            });
+            await DataService.saveDoc('seasons', { episodesData: newMeta }, s.id);
+            UI.toast('Zapisano');
+        }
+    };
+
+    // --- AUTH CONTROLLER ---
+    window.Auth = {
+        mode: 'login',
+        selectedRole: 'reporter',
+        toggleMode: () => {
+            Auth.mode = Auth.mode === 'login' ? 'register' : 'login';
+            const isReg = Auth.mode === 'register';
+            SafeDOM.toggleHidden('login-fields', isReg);
+            SafeDOM.toggleHidden('register-fields', !isReg);
+            SafeDOM.text('auth-title', isReg ? 'Rejestracja' : 'Logowanie');
+            SafeDOM.text('btn-auth-action', isReg ? 'Zarejestruj się' : 'Zaloguj się');
+            SafeDOM.text('auth-toggle-link', isReg ? 'Zaloguj się' : 'Zarejestruj się');
+        },
+        setRole: (r, el) => {
+            Auth.selectedRole = r;
+            document.querySelectorAll('.role-opt').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
+        },
+        process: async () => {
+            UI.toggleLoader(true);
+            try {
+                const email = SafeDOM.val(Auth.mode === 'login' ? 'login-email' : 'reg-email');
+                const pass = SafeDOM.val(Auth.mode === 'login' ? 'login-pass' : 'reg-pass');
+                const fs = DataService.fs();
+                if (Auth.mode === 'login') {
+                    await fs.signInWithEmailAndPassword(fs.auth, email, pass);
+                } else {
+                    if (pass.length < 6) throw new Error("Hasło min. 6 znaków");
+                    await fs.createUserWithEmailAndPassword(fs.auth, email, pass);
+                    await DataService.saveDoc('users', {
+                        email: email,
+                        name: SafeDOM.val('reg-name'),
+                        role: email.startsWith('admin') ? 'admin' : Auth.selectedRole
+                    });
+                }
+            } catch (e) { Logger.error("Auth", e); } finally { UI.toggleLoader(false); }
+        },
+        logout: async () => { await DataService.fs().signOut(DataService.fs().auth); location.reload(); }
+    };
+
+    // --- ROUTER ---
+    window.Router = {
+        history: [],
+        go: (viewId, isBack = false) => {
+            const current = document.querySelector('.app-container:not(.hidden)');
+            if (current && !isBack && current.id !== 'view-login') Router.history.push(current.id.replace('view-', ''));
+            
+            document.querySelectorAll('.app-container').forEach(el => el.classList.add('hidden'));
+            SafeDOM.get('view-' + viewId)?.classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            SafeDOM.get('nav-' + viewId)?.classList.add('active');
+            
+            if (viewId === 'dashboard') Router.history = [];
+            window.App.renderAll();
+        },
+        back: () => Router.go(Router.history.length > 0 ? Router.history.pop() : 'dashboard', true)
+    };
+
+    // --- SELECTORS ---
+    window.Calendar = {
+        open: () => { UI.openModal('modal-calendar'); window.Calendar.render(new Date()); },
+        render: (date) => {
+            const container = SafeDOM.get('cal-days-container');
+            if(!container) return;
+            container.innerHTML = '';
+            SafeDOM.text('cal-month-year', Utils.getMonthYear(date.toISOString()));
+            const frag = document.createDocumentFragment();
+            for(let i=1; i<=30; i++) {
+                const d = document.createElement('div');
+                d.className = 'cal-day';
+                d.innerText = i;
+                d.onclick = () => {
+                    const str = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}-${i.toString().padStart(2,'0')}`;
+                    SafeDOM.val('job-date', str);
+                    SafeDOM.text('job-date-display', str);
+                    UI.closeModal('modal-calendar');
+                };
+                frag.appendChild(d);
+            }
+            container.appendChild(frag);
+        },
+        prevMonth: () => {}, nextMonth: () => {}
+    };
+
+    window.Selector = {
+        openEpisodes: (inputId, displayId) => {
+            const list = SafeDOM.get('selector-list');
+            list.innerHTML = '';
+            SafeDOM.text('selector-title', "Wybierz Odcinek");
+            const count = (State.getActiveSeason() || {}).episodes || 12;
+            const frag = document.createDocumentFragment();
+            for(let i=1; i<=count; i++) {
+                const item = document.createElement('div');
+                item.className = 'selector-item';
+                item.innerText = `Odcinek ${i}`;
+                item.onclick = () => {
+                    SafeDOM.val(inputId, i);
+                    SafeDOM.text(displayId, `Odcinek ${i}`);
+                    UI.closeModal('modal-selector');
+                };
+                frag.appendChild(item);
+            }
+            list.appendChild(frag);
+            UI.openModal('modal-selector');
+        },
+        openRoles: (displayId, valId) => {
+            const list = SafeDOM.get('selector-list');
+            list.innerHTML = '';
+            SafeDOM.text('selector-title', "Wybierz Rolę");
+            const roles = ['Operator', 'Dźwiękowiec', 'Montażysta', 'Kierownik Planu', 'Oświetlacz'];
+            const frag = document.createDocumentFragment();
+            roles.forEach(role => {
+                const item = document.createElement('div');
+                item.className = 'selector-item';
+                item.innerText = role;
+                item.onclick = () => {
+                    SafeDOM.val(valId, role);
+                    SafeDOM.get(displayId).querySelector('span').innerText = role;
+                    UI.closeModal('modal-selector');
+                };
+                frag.appendChild(item);
+            });
+            list.appendChild(frag);
+            UI.openModal('modal-selector');
+        }
+    };
+
+    window.App.init();
+
+</script>
+
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+        apiKey: "AIzaSyDVtvXvX-02DVsPn-97zrUCfVN9t9H1dOs",
+        authDomain: "raban-7d606.firebaseapp.com",
+        projectId: "raban-7d606",
+        storageBucket: "raban-7d606.firebasestorage.app",
+        messagingSenderId: "57735110728",
+        appId: "1:57735110728:web:1dc86035fc8d01f766f87d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'studio-raban-prod';
+
+    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        signInWithCustomToken(auth, __initial_auth_token).catch(e => console.error("Custom token error", e));
+    }
+
+    window.Services = { 
+        app, auth, db, appId, 
+        collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs,
+        signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
+    };
+
+    window.dispatchEvent(new CustomEvent('firebase-ready'));
+</script>
+</body>
+</html>
