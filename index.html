@@ -749,9 +749,21 @@
                 actions = `<button type="button" onclick="window.App.openEditJob('${job.id}')" class="btn btn-sm btn-secondary" style="width:100%; margin-top:10px;">Edytuj</button>`;
             }
 
-            const crewHtml = (job.crew || []).map(c => `
-                <div style="font-size:12px; color:#aaa; margin-top:2px;">• ${Utils.escape(c.role)} <b>${Utils.escape(c.name)}</b></div>
-            `).join('');
+            const crewHtml = (job.crew || []).map(c => {
+                const nameEsc = Utils.escape(c.name);
+                const roleEsc = Utils.escape(c.role);
+                // Jeśli jest numer telefonu, generujemy klikalny link
+                if (c.phone) {
+                    return `<div style="font-size:12px; color:#aaa; margin-top:4px; display:flex; align-items:center; gap:5px;">
+                        <span>• ${roleEsc}</span>
+                        <a href="tel:${Utils.escape(c.phone)}" style="color:white; font-weight:700; text-decoration:none; border-bottom:1px dotted var(--brand-color); display:flex; align-items:center; gap:4px;">
+                            ${nameEsc} <span class="material-symbols-outlined" style="font-size:14px; color:var(--brand-color)">call</span>
+                        </a>
+                    </div>`;
+                }
+                // Jeśli nie ma numeru, wyświetlamy po staremu
+                return `<div style="font-size:12px; color:#aaa; margin-top:2px;">• ${roleEsc} <b>${nameEsc}</b></div>`;
+            }).join('');
             
             const showFinance = ['production', 'admin', 'producer'].includes(role);
             const costHtml = (showFinance && totalCost > 0) 
