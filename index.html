@@ -114,7 +114,50 @@
         .btn-remove-row { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,69,58,0.15); color: var(--ios-red); border: none; font-size: 20px; display: flex; align-items: center; justify-content: center; }
 
         /* --- DOMAIN: LOGISTICS & CREW --- */
-        .crew-row-item { display: grid; grid-template-columns: 1fr 1.2fr 40px; gap: 8px; margin-bottom: 10px; align-items: center; width: 100%; }
+        .crew-row-item { 
+            display: flex; align-items: stretch; 
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 14px; padding: 0; margin-bottom: 10px; overflow: hidden;
+            transition: border-color 0.2s; min-height: 60px;
+        }
+        .crew-row-item:focus-within { border-color: var(--brand-color); background: rgba(255,255,255,0.08); }
+        
+        .crew-role-badge {
+            background: rgba(172, 50, 228, 0.15); color: var(--brand-color);
+            width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; border-right: 1px solid rgba(255,255,255,0.05);
+            transition: background 0.2s;
+        }
+        .crew-role-badge:active { background: rgba(172, 50, 228, 0.25); }
+        
+        .crew-info-stack { 
+            flex: 1; display: flex; flex-direction: column; justify-content: center; 
+            padding: 8px 12px; gap: 2px;
+        }
+        
+        .crew-input-name {
+            width: 100%; background: transparent; border: none; color: white; 
+            font-size: 15px; font-weight: 600; outline: none; padding: 0;
+        }
+        .crew-input-name::placeholder { color: rgba(255,255,255,0.3); font-weight: 400; }
+
+        .crew-input-phone {
+            width: 100%; background: transparent; border: none; color: var(--text-secondary); 
+            font-size: 12px; outline: none; padding: 0; display: block;
+        }
+        .crew-input-phone::placeholder { color: rgba(255,255,255,0.2); }
+
+        .crew-actions {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 0 10px; border-left: 1px solid rgba(255,255,255,0.05); gap: 4px;
+        }
+
+        .crew-input-cost {
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+            color: var(--ios-green); font-weight: 700; border-radius: 6px;
+            padding: 4px; width: 60px; text-align: center; font-size: 11px; outline: none;
+        }
+
         .logistics-row { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px; margin-bottom: 8px; border: 1px solid rgba(255,255,255,0.05); }
         .logistics-check { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
         .logistics-check input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--brand-color); }
@@ -1260,21 +1303,32 @@
             const showCost = ['production', 'producer', 'admin'].includes(State.getCurrentRole());
             const div = document.createElement('div');
             div.className = 'crew-row-item';
-            // Zmiana: Wrapujemy input imienia i dodajemy input telefonu
+            
             div.innerHTML = `
-                <div class="input-field input-clickable" style="flex:1;" id="rd-${id}" onclick="window.Selector.openRoles('rd-${id}','rv-${id}')">
-                    <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px;">${data.role||'Rola...'}</span>
+                <div class="crew-role-badge" id="rd-${id}" onclick="window.Selector.openRoles('rd-${id}','rv-${id}')">
+                    <i data-lucide="user-circle" style="width:20px; height:20px; margin-bottom:4px;"></i>
+                    <span class="role-text" style="font-size:9px; font-weight:700; text-transform:uppercase; text-align:center; line-height:1.1;">${data.role||'WYBIERZ'}</span>
                 </div>
                 <input type="hidden" class="crew-role" id="rv-${id}" value="${data.role||''}">
-                <div style="flex:1.5; display:flex; flex-direction:column; gap:6px;">
-                    <input type="text" class="input-field crew-name" placeholder="Imię i Nazwisko" value="${data.name||''}" onblur="window.App.autofillPhone(this)">
-                    <input type="tel" class="input-field crew-phone" placeholder="Tel (opcjonalny)" value="${data.phone||''}" style="font-size:11px; padding:8px; height:auto; background:rgba(255,255,255,0.05);">
+                
+                <div class="crew-info-stack">
+                    <input type="text" class="crew-input-name crew-name" placeholder="Imię i Nazwisko" value="${data.name||''}" onblur="window.App.autofillPhone(this)">
+                    <div style="display:flex; align-items:center; gap:4px; opacity:0.7;">
+                        <i data-lucide="phone" style="width:10px; height:10px;"></i>
+                        <input type="tel" class="crew-input-phone crew-phone" placeholder="Telefon..." value="${data.phone||''}">
+                    </div>
                 </div>
-                ${showCost ? `<input type="number" class="input-field crew-cost" placeholder="PLN" value="${data.cost||''}" style="width:70px; padding:10px 5px; text-align:center;">` : ''}
-                <button type="button" class="btn-remove-row" onclick="this.parentElement.remove()">×</button>`;
-            SafeDOM.get('crew-list')?.appendChild(div);
-        },
 
+                <div class="crew-actions">
+                    <button type="button" class="btn-remove-row" onclick="this.closest('.crew-row-item').remove()" style="width:24px; height:24px; font-size:16px; background:transparent; color:var(--ios-red);">
+                        <i data-lucide="x"></i>
+                    </button>
+                    ${showCost ? `<input type="number" class="crew-input-cost" placeholder="0" value="${data.cost||''}">` : ''}
+                </div>`;
+            
+            SafeDOM.get('crew-list')?.appendChild(div);
+            if(window.lucide) window.lucide.createIcons();
+        },
         // Helper do autouzupełniania telefonu z pamięci lokalnej
         autofillPhone: (nameInput) => {
             const name = nameInput.value.trim();
@@ -1469,8 +1523,11 @@
                 item.className = 'selector-item';
                 item.innerText = `Odcinek ${i}`;
                 item.onclick = () => {
-                    SafeDOM.val(inputId, i);
-                    SafeDOM.text(displayId, `Odcinek ${i}`);
+                    SafeDOM.val(valId, role);
+                    const displayEl = SafeDOM.get(displayId);
+                    // Celujemy w konkretną klasę, a jak nie ma (kompatybilność) to w pierwszy span
+                    const textSpan = displayEl.querySelector('.role-text') || displayEl.querySelector('span');
+                    if(textSpan) textSpan.innerText = role;
                     UI.closeModal('modal-selector');
                 };
                 frag.appendChild(item);
