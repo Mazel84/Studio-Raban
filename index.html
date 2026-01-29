@@ -6,12 +6,14 @@
     <meta content="yes" name="apple-mobile-web-app-capable"/>
     <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
     <meta content="#000000" name="theme-color"/>
-    <title>Studio Raban Manager 6.6 (Refactored)</title>
+    <title>Studio Raban Manager 6.7 (Clean Architect)</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet"/>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+
     <style>
         /* --- CORE VARIABLES --- */
         :root {
@@ -94,8 +96,7 @@
         .input-field {
             width: 100%; background: rgba(120, 120, 128, 0.15); border: 1px solid rgba(255,255,255,0.05); color: white;
             padding: 14px; border-radius: 12px; font-size: 16px; outline: none; transition: background 0.2s, border 0.2s;
-            -webkit-appearance: none;
-            appearance: none;
+            -webkit-appearance: none; appearance: none;
         }
         textarea.input-field { min-height: 80px; resize: none; line-height: 1.4; }
         .input-field:focus { background: rgba(120, 120, 128, 0.25); border-color: var(--brand-color); }
@@ -334,8 +335,8 @@
     <div style="height: 10vh;"></div>
     <div style="text-align: center; margin-bottom: 40px;">
         <div style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
-    <i data-lucide="clapperboard" style="width: 50px; height: 50px;"></i>
-</div>
+            <i data-lucide="clapperboard" style="width: 50px; height: 50px;"></i>
+        </div>
         <h1>Studio Raban</h1>
         <p style="color: var(--text-secondary);">Manager Produkcji</p>
     </div>
@@ -415,8 +416,6 @@
             </div>
         </div>
 
-        
-
         <div class="hidden" id="mgmt-dashboard">
             <div style="margin-bottom: 20px;">
                 <div class="dash-card" onclick="window.Router.go('list')" style="display: flex; align-items: center; padding: 20px; gap: 20px; min-height: 90px;">
@@ -436,8 +435,8 @@
         <div class="hidden" id="reporter-dashboard">
             <div class="card" style="text-align: center; border-color: var(--brand-color); background: rgba(172, 50, 228, 0.1);">
                 <div style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
-    <i data-lucide="video" style="width: 40px; height: 40px;"></i>
-</div>
+                    <i data-lucide="video" style="width: 40px; height: 40px;"></i>
+                </div>
                 <h2>Masz temat?</h2>
                 <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Zgłoś temat do akceptacji PAXa.</p>
                 <button class="btn btn-primary" onclick="window.App.openNewOrder()">Nowe Zlecenie +</button>
@@ -454,7 +453,7 @@
             <button class="btn btn-primary btn-sm hidden" id="btn-add-list" onclick="window.App.openNewOrder()" style="margin-left: auto;">+ Dodaj</button>
         </div>
         <div class="input-group">
-            <input class="input-field" id="search-jobs" onkeyup="window.App.renderList()" placeholder="Szukaj..." type="text"/>
+            <input class="input-field" id="search-jobs" placeholder="Szukaj..." type="text"/>
         </div>
         <div id="jobs-list-container"></div>
     </div>
@@ -621,17 +620,16 @@
 
 <script>
     /**
-     * STUDIO RABAN MANAGER - CORE SYSTEM v6.7
+     * STUDIO RABAN MANAGER - CORE SYSTEM v6.7 (Refactored)
      * Architecture: Namespace-based SPA with Firebase Backend.
+     * Principles: Clean Code, DRY, Robustness.
      */
 
     // --- UTILITIES ---
     const Utils = {
         escape: (str) => {
             if (str === null || str === undefined) return '';
-            return String(str).replace(/[&<>"']/g, function(m) {
-                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-            });
+            return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
         },
         generateId: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
         formatDate: (dateStr) => {
@@ -643,12 +641,22 @@
             if (!dateStr) return 'Inne';
             const date = new Date(dateStr);
             if (isNaN(date.getTime())) return 'Inne';
-            const months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'];
-            return `${months[date.getMonth()]} ${date.getFullYear()}`;
+            return date.toLocaleString('pl-PL', { month: 'long', year: 'numeric' });
         },
         safeNumber: (val) => {
             const num = parseFloat(val);
             return isNaN(num) ? 0 : num;
+        },
+        debounce: (func, wait) => {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
     };
 
@@ -660,7 +668,7 @@
         }
     };
 
-    // --- DOM ABSTRACTION ---
+    // --- DOM ABSTRACTION (SAFE DOM) ---
     const SafeDOM = {
         get: (id) => document.getElementById(id),
         val: (id, v) => {
@@ -671,10 +679,10 @@
         },
         text: (id, t) => { const el = document.getElementById(id); if (el) el.innerText = t; },
         html: (id, h) => { const el = document.getElementById(id); if (el) el.innerHTML = h; },
-        style: (id, p, v) => { const el = document.getElementById(id); if (el) el.style[p] = v; },
-        toggleHidden: (id, hide) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', hide); },
+        setVisible: (id, visible) => { const el = document.getElementById(id); if (el) el.classList.toggle('hidden', !visible); },
         isChecked: (id) => { const el = document.getElementById(id); return el ? el.checked : false; },
-        setChecked: (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; }
+        setChecked: (id, v) => { const el = document.getElementById(id); if (el) el.checked = v; },
+        style: (id, p, v) => { const el = document.getElementById(id); if (el) el.style[p] = v; }
     };
 
     // --- STATE MANAGEMENT ---
@@ -698,12 +706,16 @@
     const DataService = {
         fs: () => window.Services,
         
+        getCollectionRef: (colName) => {
+            const fs = DataService.fs();
+            return fs.collection(fs.db, 'artifacts', fs.appId, 'public', 'data', colName);
+        },
+
         initListeners: () => {
             const subscribe = (col, key) => {
-                const fs = DataService.fs();
                 try {
-                    const ref = fs.collection(fs.db, 'artifacts', fs.appId, 'public', 'data', col);
-                    fs.onSnapshot(ref, (snap) => {
+                    const ref = DataService.getCollectionRef(col);
+                    DataService.fs().onSnapshot(ref, (snap) => {
                         State.data[key] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                         if (col === 'seasons' && !State.activeSeasonId && State.data.seasons.length > 0) {
                             State.activeSeasonId = State.data.seasons[0].id;
@@ -740,10 +752,7 @@
             if (!email) return null;
             try {
                 const fs = DataService.fs();
-                const q = fs.query(
-                    fs.collection(fs.db, 'artifacts', fs.appId, 'public', 'data', 'users'),
-                    fs.where("email", "==", email)
-                );
+                const q = fs.query(DataService.getCollectionRef('users'), fs.where("email", "==", email));
                 const snap = await fs.getDocs(q);
                 return snap.empty ? null : { email, ...snap.docs[0].data() };
             } catch (e) { Logger.error("Fetch User", e); return null; }
@@ -754,7 +763,7 @@
     window.UI = {
         openModal: (id) => SafeDOM.get(id)?.classList.add('open'),
         closeModal: (id) => SafeDOM.get(id)?.classList.remove('open'),
-        toggleLoader: (show) => SafeDOM.toggleHidden('loader', !show),
+        toggleLoader: (show) => SafeDOM.setVisible('loader', show),
         
         toast: (msg, type = 'normal') => {
             const container = SafeDOM.get('toast-container');
@@ -778,8 +787,7 @@
             } else {
                 totalCost = (job.crew || []).reduce((acc, c) => acc + Utils.safeNumber(c.cost), 0);
                 if (job.logistics) {
-                    totalCost += Utils.safeNumber(job.logistics.hotel?.cost);
-                    totalCost += Utils.safeNumber(job.logistics.transport?.cost);
+                    totalCost += Utils.safeNumber(job.logistics.hotel?.cost) + Utils.safeNumber(job.logistics.transport?.cost);
                 }
             }
 
@@ -791,21 +799,34 @@
             };
             const status = statusConfig[job.status] || { class: '', text: job.status };
             
-            let actions = '';
-            if (isSup && job.status === 'pending_approval') {
-                actions = `
-                    <div style="display:flex; gap:10px; margin-top:15px;">
-                        <button type="button" onclick="window.App.handlePaxDecision('${job.id}', false)" class="btn btn-sm btn-reject" style="flex:1;">Odrzuć</button>
-                        <button type="button" onclick="window.App.handlePaxDecision('${job.id}', true)" class="btn btn-sm btn-approve" style="flex:1;">Akceptuj</button>
-                    </div>`;
-            } else if (isEditable) {
-                actions = `<button type="button" onclick="window.App.openEditJob('${job.id}')" class="btn btn-sm btn-secondary" style="width:100%; margin-top:10px;">Edytuj</button>`;
-            }
+            const div = document.createElement('div');
+            div.className = 'card';
+            
+            // Build inner HTML using template literals for clarity
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between;">
+                    <div>
+                        <span class="status-badge ${status.class}">${status.text}</span> 
+                        <span style="font-size:11px; color:#888;">${Utils.escape(job.date)}</span>
+                        ${(['production', 'admin', 'producer'].includes(role) && totalCost > 0) 
+                            ? `<span style="font-size:11px; font-weight:700; color:var(--ios-green); background:rgba(48, 209, 88, 0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${totalCost} PLN</span>` 
+                            : ''}
+                    </div>
+                </div>
+                <h3 style="margin:8px 0; color:white; font-size:16px; text-transform:none;">${Utils.escape(job.title)}</h3>
+                <div style="font-size:13px; color:#ccc; margin-bottom:8px;">${Utils.escape(job.location)}</div>
+                ${job.paxComment ? `<div style="font-size:12px; color:var(--ios-indigo); margin-bottom:5px;">PAX: ${Utils.escape(job.paxComment)}</div>` : ''}
+                <div style="margin-top:5px;">${UI._renderCrewList(job.crew)}</div>
+                ${UI._renderCardActions(job, isSup, isEditable)}
+            `;
+            return div;
+        },
 
-            const crewHtml = (job.crew || []).map(c => {
+        _renderCrewList: (crew) => {
+            if (!crew || !crew.length) return '';
+            return crew.map(c => {
                 const nameEsc = Utils.escape(c.name);
                 const roleEsc = Utils.escape(c.role);
-                // Jeśli jest numer telefonu, generujemy klikalny link
                 if (c.phone) {
                     return `<div style="font-size:12px; color:#aaa; margin-top:4px; display:flex; align-items:center; gap:5px;">
                         <span>• ${roleEsc}</span>
@@ -814,32 +835,21 @@
                         </a>
                     </div>`;
                 }
-                // Jeśli nie ma numeru, wyświetlamy po staremu
                 return `<div style="font-size:12px; color:#aaa; margin-top:2px;">• ${roleEsc} <b>${nameEsc}</b></div>`;
             }).join('');
-            
-            const showFinance = ['production', 'admin', 'producer'].includes(role);
-            const costHtml = (showFinance && totalCost > 0) 
-                ? `<span style="font-size:11px; font-weight:700; color:var(--ios-green); background:rgba(48, 209, 88, 0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${totalCost} PLN</span>` 
-                : '';
+        },
 
-            const div = document.createElement('div');
-            div.className = 'card';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between;">
-                    <div>
-                        <span class="status-badge ${status.class}">${status.text}</span> 
-                        <span style="font-size:11px; color:#888;">${job.date}</span>
-                        ${costHtml}
-                    </div>
-                </div>
-                <h3 style="margin:8px 0; color:white; font-size:16px; text-transform:none;">${Utils.escape(job.title)}</h3>
-                <div style="font-size:13px; color:#ccc; margin-bottom:8px;">${Utils.escape(job.location)}</div>
-                ${job.paxComment ? `<div style="font-size:12px; color:var(--ios-indigo); margin-bottom:5px;">PAX: ${Utils.escape(job.paxComment)}</div>` : ''}
-                <div style="margin-top:5px;">${crewHtml}</div>
-                ${actions}
-            `;
-            return div;
+        _renderCardActions: (job, isSup, isEditable) => {
+            if (isSup && job.status === 'pending_approval') {
+                return `
+                    <div style="display:flex; gap:10px; margin-top:15px;">
+                        <button type="button" onclick="window.App.handlePaxDecision('${job.id}', false)" class="btn btn-sm btn-reject" style="flex:1;">Odrzuć</button>
+                        <button type="button" onclick="window.App.handlePaxDecision('${job.id}', true)" class="btn btn-sm btn-approve" style="flex:1;">Akceptuj</button>
+                    </div>`;
+            } else if (isEditable) {
+                return `<button type="button" onclick="window.App.openEditJob('${job.id}')" class="btn btn-sm btn-secondary" style="width:100%; margin-top:10px;">Edytuj</button>`;
+            }
+            return '';
         }
     };
 
@@ -849,7 +859,6 @@
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
-                    // UWAGA: Tutaj w przyszłości wkleisz swój klucz z konsoli Firebase
                     const vapidKey = "BGUTGgQgo-SdzuGNSRdI-GzEBfKlWwgC-YsLieL2BOEWec02Wer2ESGOOZzT0eDhj_N1DGapaiFTVsiXpqBvSV4"; 
                     if (vapidKey.includes("TU_WKLEJ")) return console.warn("Powiadomienia: Brak klucza VAPID");
 
@@ -863,29 +872,21 @@
         },
 
         sendPush: async (targetRole, title, body) => {
-            // UWAGA: To jest metoda frontendowa (Opcja B). Klucz jest widoczny w kodzie.
-            // W profesjonalnych apkach komercyjnych robi się to przez Cloud Functions (Backend).
             const serverKey = "AIzaSyDVtvXvX-02DVsPn-97zrUCfVN9t9H1dOs"; 
             if (serverKey.includes("TU_WKLEJ")) return;
 
             const targets = State.data.users.filter(u => u.role === targetRole && u.pushToken);
-            if (targets.length === 0) return console.log("Brak odbiorców push dla roli:", targetRole);
+            if (targets.length === 0) return;
 
-            targets.forEach(async (u) => {
+            for (const u of targets) {
                 try {
                     await fetch('https://fcm.googleapis.com/fcm/send', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'key=' + serverKey
-                        },
-                        body: JSON.stringify({
-                            to: u.pushToken,
-                            notification: { title: title, body: body, icon: '/icon-192.png' }
-                        })
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'key=' + serverKey },
+                        body: JSON.stringify({ to: u.pushToken, notification: { title, body, icon: '/icon-192.png' } })
                     });
-                } catch (e) { console.error("Błąd wysyłania:", e); }
-            });
+                } catch (e) { console.error("Błąd wysyłania push:", e); }
+            }
         },
 
         init: () => {
@@ -899,19 +900,19 @@
                         if (userData) {
                             State.user = userData;
                             DataService.initListeners();
-                            SafeDOM.toggleHidden('view-login', true);
-                            SafeDOM.toggleHidden('app-wrapper', false);
+                            SafeDOM.setVisible('view-login', false);
+                            SafeDOM.setVisible('app-wrapper', true);
                             SafeDOM.text('user-name-display', userData.name || 'Użytkownik');
                             window.App.updateRoleDisplay();
-                            window.App.initNotifications(); // Start powiadomień
+                            window.App.initNotifications();
                             window.Router.go('dashboard');
                         } else {
                             await DataService.fs().signOut(auth);
-                            SafeDOM.toggleHidden('view-login', false);
+                            SafeDOM.setVisible('view-login', true);
                         }
                     } else {
-                        SafeDOM.toggleHidden('view-login', false);
-                        SafeDOM.toggleHidden('app-wrapper', true);
+                        SafeDOM.setVisible('view-login', true);
+                        SafeDOM.setVisible('app-wrapper', false);
                     }
                     UI.toggleLoader(false);
                 });
@@ -919,6 +920,10 @@
 
             if (window.Services) start();
             else window.addEventListener('firebase-ready', start);
+            
+            // Setup Debounced Search
+            const searchInput = SafeDOM.get('search-jobs');
+            if(searchInput) searchInput.addEventListener('keyup', Utils.debounce(() => window.App.renderList(), 300));
         },
 
         renderAll: () => {
@@ -927,31 +932,27 @@
             
             // Dashboard Visibility
             const isRep = role === 'reporter';
-            SafeDOM.toggleHidden('reporter-dashboard', !isRep);
-            SafeDOM.toggleHidden('mgmt-dashboard', isRep);
-            SafeDOM.toggleHidden('admin-switcher', State.user.role !== 'admin');
+            SafeDOM.setVisible('reporter-dashboard', isRep);
+            SafeDOM.setVisible('mgmt-dashboard', !isRep);
+            SafeDOM.setVisible('admin-switcher', State.user.role === 'admin');
 
             // Navigation Visibility
             const canSeeFinance = ['production', 'admin', 'producer'].includes(role);
-            SafeDOM.toggleHidden('nav-finances', !canSeeFinance);
-            SafeDOM.toggleHidden('dash-card-finance', !canSeeFinance);
-            SafeDOM.toggleHidden('nav-settings', !canSeeFinance);
+            SafeDOM.setVisible('nav-finances', canSeeFinance);
+            SafeDOM.setVisible('nav-settings', canSeeFinance);
 
-            // Conditional Rendering (Performance)
+            // Conditional Rendering
             if (!SafeDOM.get('view-dashboard').classList.contains('hidden')) App.renderDashboard();
             if (!SafeDOM.get('view-list').classList.contains('hidden')) App.renderList();
             if (!SafeDOM.get('view-finances').classList.contains('hidden') && canSeeFinance) App.renderFinances();
             if (!SafeDOM.get('view-settings').classList.contains('hidden') && canSeeFinance) App.renderSettings();
-
-            const activeSeason = State.getActiveSeason();
-            if (activeSeason) SafeDOM.text('active-season-label', activeSeason.name);
         },
 
         renderDashboard: () => {
             const jobs = State.getFilteredJobs();
             const count = jobs.filter(j => j.status === 'pending_approval').length;
-
-            // Logika odmiany języka polskiego
+            
+            // Polish pluralization
             let suffix = 'Nowych Powiadomień';
             if (count === 1) suffix = 'Nowe Powiadomienie';
             else if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) suffix = 'Nowe Powiadomienia';
@@ -1033,13 +1034,11 @@
                 expenseList.push({ type: 'extra', id: c.id, title: c.title, desc: c.episodeId ? `Odc. ${c.episodeId}` : 'Ogólny', amount: amt, icon: 'attach_money' });
             });
 
-            // UI Updates
             SafeDOM.text('season-spent', `${totalSpent} PLN`);
             SafeDOM.text('season-total', `${budget} PLN`);
             SafeDOM.text('season-remaining', `${budget - totalSpent} PLN`);
             SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent/budget)*100, 100) : 0}%`);
 
-            // Grid Render
             const grid = SafeDOM.get('episodes-grid');
             if(grid) {
                 grid.innerHTML = '';
@@ -1057,7 +1056,6 @@
                 grid.appendChild(frag);
             }
 
-            // Expense List
             const listContainer = SafeDOM.get('finance-list');
             if (listContainer) {
                 listContainer.innerHTML = '';
@@ -1127,10 +1125,10 @@
             SafeDOM.html('crew-list', '');
             
             const role = State.getCurrentRole();
-            SafeDOM.toggleHidden('group-pax-comment', !['pax', 'admin'].includes(role));
+            SafeDOM.setVisible('group-pax-comment', ['pax', 'admin'].includes(role));
             const canManageProd = ['production', 'producer', 'admin'].includes(role);
-            SafeDOM.toggleHidden('group-episode', !canManageProd);
-            SafeDOM.toggleHidden('group-job-cost', !canManageProd);
+            SafeDOM.setVisible('group-episode', canManageProd);
+            SafeDOM.setVisible('group-job-cost', canManageProd);
 
             const today = new Date().toISOString().split('T')[0];
             SafeDOM.val('job-date', today);
@@ -1166,19 +1164,19 @@
             (j.crew || []).forEach(c => App.addCrewRow(c));
 
             SafeDOM.setChecked('check-hotel', j.logistics?.hotel?.needed || false);
-            SafeDOM.toggleHidden('wrap-hotel', !j.logistics?.hotel?.needed);
+            SafeDOM.setVisible('wrap-hotel', j.logistics?.hotel?.needed);
             SafeDOM.val('desc-hotel', j.logistics?.hotel?.details || '');
             SafeDOM.val('cost-hotel', j.logistics?.hotel?.cost || '');
 
             SafeDOM.setChecked('check-transport', j.logistics?.transport?.needed || false);
-            SafeDOM.toggleHidden('wrap-transport', !j.logistics?.transport?.needed);
+            SafeDOM.setVisible('wrap-transport', j.logistics?.transport?.needed);
             SafeDOM.val('desc-transport', j.logistics?.transport?.details || '');
             SafeDOM.val('cost-transport', j.logistics?.transport?.cost || '');
 
             const role = State.getCurrentRole();
-            SafeDOM.toggleHidden('group-pax-comment', !['pax', 'admin'].includes(role));
-            SafeDOM.toggleHidden('group-episode', !['production', 'producer', 'admin'].includes(role));
-            SafeDOM.toggleHidden('group-job-cost', !['production', 'producer', 'admin'].includes(role));
+            SafeDOM.setVisible('group-pax-comment', ['pax', 'admin'].includes(role));
+            SafeDOM.setVisible('group-episode', ['production', 'producer', 'admin'].includes(role));
+            SafeDOM.setVisible('group-job-cost', ['production', 'producer', 'admin'].includes(role));
 
             SafeDOM.get('btn-delete-job')?.remove();
             SafeDOM.get('btn-confirm-crew')?.remove();
@@ -1195,7 +1193,7 @@
                 }
                 const delBtn = document.createElement('button');
                 delBtn.id = 'btn-delete-job';
-                delBtn.type = 'button'; // WAŻNE: Zapobiega wysyłaniu formularza
+                delBtn.type = 'button';
                 delBtn.className = 'btn btn-reject';
                 delBtn.style.marginTop = '10px';
                 delBtn.innerText = 'Usuń Zlecenie';
@@ -1209,32 +1207,27 @@
             try {
                 const editId = SafeDOM.get('order-form').dataset.id;
                 const crew = [];
-            // Pobieramy aktualną książkę telefoniczną
-            const phonebook = JSON.parse(localStorage.getItem('sr_phonebook') || '{}');
-            let phonebookUpdated = false;
+                const phonebook = JSON.parse(localStorage.getItem('sr_phonebook') || '{}');
+                let phonebookUpdated = false;
 
-            document.querySelectorAll('.crew-row-item').forEach(r => {
-                const cName = r.querySelector('.crew-name').value.trim();
-                const cPhone = r.querySelector('.crew-phone').value.trim();
-
-                // Jeżeli wpisano imię i telefon, aktualizujemy lokalną bazę
-                if (cName && cPhone) {
-                    phonebook[cName] = cPhone;
-                    phonebookUpdated = true;
-                }
-
-                crew.push({
-                    role: r.querySelector('.crew-role').value,
-                    name: cName,
-                    phone: cPhone, // Dodajemy telefon do obiektu wysyłanego do bazy
-                    cost: Utils.safeNumber(r.querySelector('.crew-cost')?.value)
+                document.querySelectorAll('.crew-row-item').forEach(r => {
+                    const cName = r.querySelector('.crew-name').value.trim();
+                    const cPhone = r.querySelector('.crew-phone').value.trim();
+                    if (cName && cPhone) {
+                        phonebook[cName] = cPhone;
+                        phonebookUpdated = true;
+                    }
+                    crew.push({
+                        role: r.querySelector('.crew-role').value,
+                        name: cName,
+                        phone: cPhone,
+                        cost: Utils.safeNumber(r.querySelector('.crew-cost')?.value)
+                    });
                 });
-            });
 
-            // Zapisujemy nową wiedzę o numerach w przeglądarce
-            if(phonebookUpdated) localStorage.setItem('sr_phonebook', JSON.stringify(phonebook));
+                if(phonebookUpdated) localStorage.setItem('sr_phonebook', JSON.stringify(phonebook));
 
-            const jobData = {
+                const jobData = {
                     title: SafeDOM.val('job-title'),
                     date: SafeDOM.val('job-date'),
                     location: SafeDOM.val('job-location'),
@@ -1254,7 +1247,6 @@
 
                 await DataService.saveDoc('jobs', jobData, editId);
                 
-                // POWIADOMIENIE: Jeśli to nowe zlecenie, daj znać Paxowi
                 if (!editId) {
                     window.App.sendPush('pax', 'Nowe Zlecenie', `Reporter ${State.user.name} dodał temat: ${jobData.title}`);
                 }
@@ -1291,24 +1283,20 @@
             
             try {
                 await DataService.saveDoc('jobs', { status: isApproved ? 'approved_concept' : 'rejected', paxComment: comment }, id);
-                
-                // POWIADOMIENIE: Info trafia do PRODUCENTA (nie produkcji)
                 if (isApproved) {
                     window.App.sendPush('producer', 'Temat Zaakceptowany', 'Wymaga Twojej decyzji: Szukać ekipy w appce czy dzwonić?');
                 } else {
-                    // Opcjonalnie: Info do reportera, że odrzucono
                     window.App.sendPush('reporter', 'Temat Odrzucony', `Pax odrzucił temat. Uwagi: ${comment}`);
                 }
-
                 UI.closeModal('modal-decision');
                 UI.toast('Decyzja zapisana');
             } catch (e) { Logger.error("Decision", e); }
         },
 
-        toggleLogistics: (type) => SafeDOM.toggleHidden('wrap-' + type, !SafeDOM.isChecked('check-' + type)),
+        toggleLogistics: (type) => SafeDOM.setVisible('wrap-' + type, SafeDOM.isChecked('check-' + type)),
         
         addCrewRow: (data = {}) => {
-            const id = Date.now() + Math.random().toString().substr(2, 5);
+            const id = Utils.generateId();
             const showCost = ['production', 'producer', 'admin'].includes(State.getCurrentRole());
             const div = document.createElement('div');
             div.className = 'crew-row-item';
@@ -1341,17 +1329,19 @@
             SafeDOM.get('crew-list')?.appendChild(div);
             if(window.lucide) window.lucide.createIcons();
         },
-        // Helper do autouzupełniania telefonu z pamięci lokalnej
+
         autofillPhone: (nameInput) => {
             const name = nameInput.value.trim();
             if(!name) return;
-            const phonebook = JSON.parse(localStorage.getItem('sr_phonebook') || '{}');
-            const row = nameInput.parentElement; 
-            const phoneInput = row.querySelector('.crew-phone');
-            if (phonebook[name] && !phoneInput.value) {
-                phoneInput.value = phonebook[name];
-                window.UI.toast('Wczytano numer dla: ' + name);
-            }
+            try {
+                const phonebook = JSON.parse(localStorage.getItem('sr_phonebook') || '{}');
+                const row = nameInput.parentElement.parentElement; // Climbing up to crew-row-item or info-stack
+                const phoneInput = row.querySelector('.crew-phone');
+                if (phonebook[name] && phoneInput && !phoneInput.value) {
+                    phoneInput.value = phonebook[name];
+                    window.UI.toast('Wczytano numer dla: ' + name);
+                }
+            } catch (e) { /* Ignore parsing errors */ }
         },
 
         openEditCost: (id) => {
@@ -1362,7 +1352,7 @@
             SafeDOM.val('cost-episode-input', cost?.episodeId || '');
             SafeDOM.text('cost-episode-display', cost?.episodeId ? `Odcinek ${cost.episodeId}` : 'Nie wybrano');
             SafeDOM.text('cost-modal-title', cost ? 'Edytuj Koszt' : 'Dodaj Koszt');
-            SafeDOM.toggleHidden('btn-delete-cost', !cost);
+            SafeDOM.setVisible('btn-delete-cost', !!cost);
             UI.openModal('modal-cost');
         },
 
@@ -1445,8 +1435,8 @@
         toggleMode: () => {
             Auth.mode = Auth.mode === 'login' ? 'register' : 'login';
             const isReg = Auth.mode === 'register';
-            SafeDOM.toggleHidden('login-fields', isReg);
-            SafeDOM.toggleHidden('register-fields', !isReg);
+            SafeDOM.setVisible('login-fields', !isReg);
+            SafeDOM.setVisible('register-fields', isReg);
             SafeDOM.text('auth-title', isReg ? 'Rejestracja' : 'Logowanie');
             SafeDOM.text('btn-auth-action', isReg ? 'Zarejestruj się' : 'Zaloguj się');
             SafeDOM.text('auth-toggle-link', isReg ? 'Zaloguj się' : 'Zarejestruj się');
@@ -1486,7 +1476,7 @@
             if (current && !isBack && current.id !== 'view-login') Router.history.push(current.id.replace('view-', ''));
             
             document.querySelectorAll('.app-container').forEach(el => el.classList.add('hidden'));
-            SafeDOM.get('view-' + viewId)?.classList.remove('hidden');
+            SafeDOM.setVisible('view-' + viewId, true);
             
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             SafeDOM.get('nav-' + viewId)?.classList.add('active');
@@ -1535,11 +1525,9 @@
                 item.className = 'selector-item';
                 item.innerText = `Odcinek ${i}`;
                 item.onclick = () => {
-                    SafeDOM.val(valId, role);
+                    SafeDOM.val(inputId, i);
                     const displayEl = SafeDOM.get(displayId);
-                    // Celujemy w konkretną klasę, a jak nie ma (kompatybilność) to w pierwszy span
-                    const textSpan = displayEl.querySelector('.role-text') || displayEl.querySelector('span');
-                    if(textSpan) textSpan.innerText = role;
+                    if(displayEl) displayEl.innerText = `Odcinek ${i}`;
                     UI.closeModal('modal-selector');
                 };
                 frag.appendChild(item);
@@ -1559,7 +1547,9 @@
                 item.innerText = role;
                 item.onclick = () => {
                     SafeDOM.val(valId, role);
-                    SafeDOM.get(displayId).querySelector('span').innerText = role;
+                    const displayEl = SafeDOM.get(displayId);
+                    const textSpan = displayEl.querySelector('.role-text') || displayEl.querySelector('span');
+                    if(textSpan) textSpan.innerText = role;
                     UI.closeModal('modal-selector');
                 };
                 frag.appendChild(item);
@@ -1568,12 +1558,9 @@
             UI.openModal('modal-selector');
         }
     };
-// --- Start App ---
-    // Najpierw renderujemy ikony Lucide
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
-    // Potem startujemy aplikację
+
+    // --- START APP ---
+    if (window.lucide) window.lucide.createIcons();
     window.App.init();
 
 </script>
@@ -1593,7 +1580,7 @@
         appId: "1:57735110728:web:1dc86035fc8d01f766f87d"
     };
 
-   const app = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     const messaging = getMessaging(app);
