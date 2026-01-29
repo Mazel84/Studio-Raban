@@ -949,7 +949,14 @@
 
         renderDashboard: () => {
             const jobs = State.getFilteredJobs();
-            SafeDOM.text('count-pending', jobs.filter(j => j.status === 'pending_approval').length);
+            const count = jobs.filter(j => j.status === 'pending_approval').length;
+
+            // Logika odmiany języka polskiego
+            let suffix = 'Nowych Powiadomień';
+            if (count === 1) suffix = 'Nowe Powiadomienie';
+            else if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) suffix = 'Nowe Powiadomienia';
+
+            SafeDOM.text('dash-pending-text', `${count} ${suffix}`);
             
             const isRep = State.getCurrentRole() === 'reporter';
             const displayJobs = (isRep ? jobs.filter(j => j.author === State.user.email) : jobs).slice(0, 5);
