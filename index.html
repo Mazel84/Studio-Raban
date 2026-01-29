@@ -1110,15 +1110,32 @@
             try {
                 const editId = SafeDOM.get('order-form').dataset.id;
                 const crew = [];
-                document.querySelectorAll('.crew-row-item').forEach(r => {
-                    crew.push({
-                        role: r.querySelector('.crew-role').value,
-                        name: r.querySelector('.crew-name').value,
-                        cost: Utils.safeNumber(r.querySelector('.crew-cost')?.value)
-                    });
-                });
+            // Pobieramy aktualną książkę telefoniczną
+            const phonebook = JSON.parse(localStorage.getItem('sr_phonebook') || '{}');
+            let phonebookUpdated = false;
 
-                const jobData = {
+            document.querySelectorAll('.crew-row-item').forEach(r => {
+                const cName = r.querySelector('.crew-name').value.trim();
+                const cPhone = r.querySelector('.crew-phone').value.trim();
+
+                // Jeżeli wpisano imię i telefon, aktualizujemy lokalną bazę
+                if (cName && cPhone) {
+                    phonebook[cName] = cPhone;
+                    phonebookUpdated = true;
+                }
+
+                crew.push({
+                    role: r.querySelector('.crew-role').value,
+                    name: cName,
+                    phone: cPhone, // Dodajemy telefon do obiektu wysyłanego do bazy
+                    cost: Utils.safeNumber(r.querySelector('.crew-cost')?.value)
+                });
+            });
+
+            // Zapisujemy nową wiedzę o numerach w przeglądarce
+            if(phonebookUpdated) localStorage.setItem('sr_phonebook', JSON.stringify(phonebook));
+
+            const jobData = {
                     title: SafeDOM.val('job-title'),
                     date: SafeDOM.val('job-date'),
                     location: SafeDOM.val('job-location'),
