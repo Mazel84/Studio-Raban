@@ -1313,12 +1313,12 @@
                 
                 <div class="crew-info-stack">
                     <input type="text" class="crew-input-name crew-name" placeholder="Imię i Nazwisko" value="${data.name||''}" onblur="window.App.autofillPhone(this)">
-                    <div style="display:flex; align-items:center; gap:4px; opacity:0.7;">
+                    <div style="display:flex; align-items:center; gap:4px; opacity:0.7;" 
+                         class="${['producer', 'production', 'admin'].includes(State.getCurrentRole()) ? '' : 'hidden'}">
                         <i data-lucide="phone" style="width:10px; height:10px;"></i>
                         <input type="tel" class="crew-input-phone crew-phone" 
                                placeholder="Telefon..." 
-                               value="${data.phone||''}" 
-                               ${['producer', 'production', 'admin'].includes(State.getCurrentRole()) ? '' : 'readonly'}>
+                               value="${data.phone||''}">
                     </div>
                 </div>
 
