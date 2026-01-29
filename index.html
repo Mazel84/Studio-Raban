@@ -1135,6 +1135,7 @@
                 }
                 const delBtn = document.createElement('button');
                 delBtn.id = 'btn-delete-job';
+                delBtn.type = 'button'; // WAŻNE: Zapobiega wysyłaniu formularza
                 delBtn.className = 'btn btn-reject';
                 delBtn.style.marginTop = '10px';
                 delBtn.innerText = 'Usuń Zlecenie';
