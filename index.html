@@ -160,11 +160,12 @@
         .modal-title { font-size: 18px; font-weight: 700; }
 
         /* --- CALENDAR --- */
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px; }
+        .cal-week-row { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 12px; }
+        .cal-weekday { text-align: center; font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; text-align: center; }
-        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; border-radius: 50%; cursor: pointer; transition: 0.1s; }
-        .cal-day:hover { background: rgba(255,255,255,0.1); }
-        .cal-day.selected { background: var(--brand-color); color: white; font-weight: 700; }
+        .cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 16px; border-radius: 12px; cursor: pointer; transition: 0.2s; background: rgba(255,255,255,0.03); font-weight: 500; }
+        .cal-day:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
         
         /* --- UTILS: PROGRESS, TOASTS, LOADER --- */
         .selector-item { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 16px; cursor: pointer; display: flex; justify-content: space-between; transition: background 0.2s;}
@@ -212,7 +213,20 @@
             <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-calendar')">Anuluj</button>
         </div>
         <div class="cal-header">
-            <span id="cal-month-year" style="font-weight:600; font-size:16px;">Miesiąc Rok</span>
+            <span id="cal-month-year" style="font-weight:700; font-size:18px;">Miesiąc Rok</span>
+            <div style="display:flex; gap:15px; opacity: 0.5;">
+                <span class="material-symbols-outlined">chevron_left</span>
+                <span class="material-symbols-outlined">chevron_right</span>
+            </div>
+        </div>
+        <div class="cal-week-row">
+            <div class="cal-weekday">Pn</div>
+            <div class="cal-weekday">Wt</div>
+            <div class="cal-weekday">Śr</div>
+            <div class="cal-weekday">Cz</div>
+            <div class="cal-weekday">Pt</div>
+            <div class="cal-weekday">Sb</div>
+            <div class="cal-weekday">Nd</div>
         </div>
         <div class="cal-grid" id="cal-days-container"></div>
     </div>
