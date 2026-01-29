@@ -780,6 +780,23 @@
 
     // --- APPLICATION LOGIC ---
     window.App = {
+        initNotifications: async () => {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // UWAGA: Tutaj w przyszłości wkleisz swój klucz z konsoli Firebase
+                    const vapidKey = "TU_WKLEJ_SWOJ_KLUCZ_VAPID_Z_KONSOLI_FIREBASE"; 
+                    if (vapidKey.includes("TU_WKLEJ")) return console.warn("Powiadomienia: Brak klucza VAPID");
+
+                    const token = await window.Services.getToken(window.Services.messaging, { vapidKey });
+                    if (token && State.user && State.user.id) {
+                        await DataService.saveDoc('users', { pushToken: token }, State.user.id);
+                        Logger.info("Powiadomienia aktywne");
+                    }
+                }
+            } catch (e) { console.error("Błąd Push:", e); }
+        },
+
         init: () => {
             const start = () => {
                 Logger.info('System start');
@@ -795,6 +812,7 @@
                             SafeDOM.toggleHidden('app-wrapper', false);
                             SafeDOM.text('user-name-display', userData.name || 'Użytkownik');
                             window.App.updateRoleDisplay();
+                            window.App.initNotifications(); // Start powiadomień
                             window.Router.go('dashboard');
                         } else {
                             await DataService.fs().signOut(auth);
@@ -1399,6 +1417,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+    import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js';
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
         apiKey: "AIzaSyDVtvXvX-02DVsPn-97zrUCfVN9t9H1dOs",
@@ -1409,9 +1428,10 @@
         appId: "1:57735110728:web:1dc86035fc8d01f766f87d"
     };
 
-    const app = initializeApp(firebaseConfig);
+   const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const messaging = getMessaging(app);
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'studio-raban-prod';
 
     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -1419,7 +1439,7 @@
     }
 
     window.Services = { 
-        app, auth, db, appId, 
+        app, auth, db, messaging, getToken, appId, 
         collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs,
         signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
     };
