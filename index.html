@@ -785,7 +785,7 @@
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
                     // UWAGA: Tutaj w przyszłości wkleisz swój klucz z konsoli Firebase
-                    const vapidKey = "TU_WKLEJ_SWOJ_KLUCZ_VAPID_Z_KONSOLI_FIREBASE"; 
+                    const vapidKey = "BGUTGgQgo-SdzuGNSRdI-GzEBfKlWwgC-YsLieL2BOEWec02Wer2ESGOOZzT0eDhj_N1DGapaiFTVsiXpqBvSV4"; 
                     if (vapidKey.includes("TU_WKLEJ")) return console.warn("Powiadomienia: Brak klucza VAPID");
 
                     const token = await window.Services.getToken(window.Services.messaging, { vapidKey });
