@@ -463,11 +463,17 @@
             <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
             <h2 class="header-title">Szczegóły</h2>
         </div>
-        <form id="order-form" onsubmit="event.preventDefault(); window.App.saveJobFromForm();">
+                <form id="order-form" onsubmit="event.preventDefault(); window.App.saveJobFromForm();">
             <div class="card">
                 <h3>Informacje</h3>
+                
+                <div style="text-align:center; margin-bottom:15px; font-size:13px; color:var(--text-secondary);">
+                    Zgłaszający: <span id="detail-author-name" style="color:var(--brand-color); font-weight:700;">--</span>
+                </div>
+
                 <div class="input-group">
                     <label>Tytuł Felietonu</label>
+
                     <input class="input-field" id="job-title" placeholder="np. Sonda o cenach paliwa" required type="text"/>
                 </div>
                 <div class="input-group">
