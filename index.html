@@ -1142,21 +1142,30 @@
             SafeDOM.setVisible('group-episode', canManageProd);
             SafeDOM.setVisible('group-job-cost', canManageProd);
 
-            const today = new Date().toISOString().split('T')[0];
+                        const today = new Date().toISOString().split('T')[0];
             SafeDOM.val('job-date', today);
             SafeDOM.text('job-date-display', today);
             SafeDOM.text('job-episode-display', 'Nie wybrano');
+            
+            // NOWE: Ustaw zalogowanego użytkownika jako zgłaszającego
+            SafeDOM.text('detail-author-name', State.user.name || State.user.email);
+            
             window.Router.go('order');
         },
 
         openEditJob: (id) => {
-            const j = State.data.jobs.find(x => x.id === id);
+                        const j = State.data.jobs.find(x => x.id === id);
             if (!j) return;
             window.Router.go('order');
+
+            // NOWE: Wyświetl autora zlecenia
+            const authorUser = State.data.users.find(u => u.email === j.author);
+            SafeDOM.text('detail-author-name', authorUser ? authorUser.name : (j.author || 'Nieznany'));
             
             const form = SafeDOM.get('order-form');
             form.dataset.id = id;
             SafeDOM.val('job-title', j.title);
+
             SafeDOM.val('job-location', j.location);
             SafeDOM.val('job-desc', j.desc);
             SafeDOM.val('job-pax-comment', j.paxComment);
