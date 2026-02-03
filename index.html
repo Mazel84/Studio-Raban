@@ -791,13 +791,17 @@
                 }
             }
 
-            const statusConfig = {
+                        const statusConfig = {
                 'pending_approval': { class: 'status-pending_approval', text: 'Czeka na PAX' },
                 'approved_concept': { class: 'status-approved_concept', text: 'Szukanie Ekipy' },
                 'production_ready': { class: 'status-production_ready', text: 'W Realizacji' },
                 'rejected': { class: 'status-rejected', text: 'Odrzucone' }
             };
             const status = statusConfig[job.status] || { class: '', text: job.status };
+
+            // LOGIC: Find Reporter Name (ZMIANA CHIRURGICZNA)
+            const authorUser = State.data.users.find(u => u.email === job.author);
+            const reporterName = authorUser ? authorUser.name : (job.author || 'Nieznany');
             
             const div = document.createElement('div');
             div.className = 'card';
@@ -808,6 +812,8 @@
                     <div>
                         <span class="status-badge ${status.class}">${status.text}</span> 
                         <span style="font-size:11px; color:#888;">${Utils.escape(job.date)}</span>
+                        <span style="font-size:11px; color:var(--text-secondary); margin-left: 5px;">| ${Utils.escape(reporterName)}</span>
+
                         ${(['production', 'admin', 'producer'].includes(role) && totalCost > 0) 
                             ? `<span style="font-size:11px; font-weight:700; color:var(--ios-green); background:rgba(48, 209, 88, 0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${totalCost} PLN</span>` 
                             : ''}
