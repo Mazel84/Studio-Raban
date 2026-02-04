@@ -883,23 +883,9 @@
             } catch (e) { console.error("Błąd Push:", e); }
         },
 
-        sendPush: async (targetRole, title, body) => {
-            const serverKey = "AIzaSyDVtvXvX-02DVsPn-97zrUCfVN9t9H1dOs"; 
-            if (serverKey.includes("TU_WKLEJ")) return;
-
-            const targets = State.data.users.filter(u => u.role === targetRole && u.pushToken);
-            if (targets.length === 0) return;
-
-            for (const u of targets) {
-                try {
-                    await fetch('https://fcm.googleapis.com/fcm/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': 'key=' + serverKey },
-                        body: JSON.stringify({ to: u.pushToken, notification: { title, body, icon: '/icon-192.png' } })
-                    });
-                } catch (e) { console.error("Błąd wysyłania push:", e); }
-            }
-        },
+        // Backend (Cloud Functions) zajmuje się wysyłaniem.
+        // Frontend tylko zapisuje tokeny w bazie.
+        sendPush: async () => { /* Funkcja wycofana - logika przeniesiona na serwer */ },
 
         init: () => {
             const start = () => {
@@ -1266,11 +1252,9 @@
                     }
                 };
 
-                await DataService.saveDoc('jobs', jobData, editId);
+               await DataService.saveDoc('jobs', jobData, editId);
                 
-                if (!editId) {
-                    window.App.sendPush('pax', 'Nowe Zlecenie', `Reporter ${State.user.name} dodał temat: ${jobData.title}`);
-                }
+                // Powiadomienie wyśle Cloud Function automatycznie (trigger: onNewJob)
 
                 UI.toast('Zapisano');
                 window.Router.back();
@@ -1304,11 +1288,9 @@
             
             try {
                 await DataService.saveDoc('jobs', { status: isApproved ? 'approved_concept' : 'rejected', paxComment: comment }, id);
-                if (isApproved) {
-                    window.App.sendPush('producer', 'Temat Zaakceptowany', 'Wymaga Twojej decyzji: Szukać ekipy w appce czy dzwonić?');
-                } else {
-                    window.App.sendPush('reporter', 'Temat Odrzucony', `Pax odrzucił temat. Uwagi: ${comment}`);
-                }
+                
+                // Powiadomienie wyśle Cloud Function automatycznie (trigger: onJobUpdate)
+                
                 UI.closeModal('modal-decision');
                 UI.toast('Decyzja zapisana');
             } catch (e) { Logger.error("Decision", e); }
