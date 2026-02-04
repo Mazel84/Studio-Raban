@@ -1605,7 +1605,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-    import { getMessaging, getToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js';
+    import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js';
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
         apiKey: "AIzaSyDVtvXvX-02DVsPn-97zrUCfVN9t9H1dOs",
@@ -1627,7 +1627,7 @@
     }
 
     window.Services = { 
-        app, auth, db, messaging, getToken, appId, 
+        app, auth, db, messaging, getToken, onMessage, appId, // <-- TU DODAŁEM onMessage
         collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs,
         signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
     };
