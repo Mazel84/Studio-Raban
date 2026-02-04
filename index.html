@@ -875,22 +875,43 @@
                 if (permission === 'granted') {
                     Logger.info("Zgoda na powiadomienia: JEST");
                     
-                    // TU WKLEJ KLUCZ Z KROKU 2 (Firebase Console -> Project Settings -> Cloud Messaging)
+                    // TU WKLEJ SWÓJ NOWY PUBLICZNY KLUCZ (VAPID) Z KONSOLI FIREBASE
+                    // Musi zaczynać się od litery 'B' (np. BKom...)
                     const vapidKey = "BKiEDyHlpFwVy6XuA_YeRkgPPbrH1kJPC6kos4C2j5Hd6JDM6mBOGtfXicEvsp31OXJdXxD13WCAJi49oePOg-I"; 
+
+                    // FIX: Ręczna rejestracja Service Workera (Anteny)
+                    // To usuwa problemy z "nieznalezionym plikiem"
+                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                     
-                    const token = await window.Services.getToken(window.Services.messaging, { vapidKey });
-                    Logger.info("Token pobrany:", token ? "TAK (końcówka: " + token.slice(-5) + ")" : "NIE");
+                    // Pobieramy token, używając konkretnej rejestracji
+                    const token = await window.Services.getToken(window.Services.messaging, { 
+                        vapidKey: vapidKey,
+                        serviceWorkerRegistration: registration 
+                    });
+
+                    Logger.info("Token pobrany: " + (token ? "TAK (długość: " + token.length + ")" : "PUSTY"));
 
                     if (token && State.user && State.user.id) {
                         await DataService.saveDoc('users', { pushToken: token }, State.user.id);
                         Logger.info("Token zapisany w bazie dla usera: " + State.user.email);
+                        
+                        // Obsługa powiadomień na żywo (Foreground)
+                        window.Services.onMessage(window.Services.messaging, (payload) => {
+                            Logger.info("Powiadomienie na żywo: " + payload.notification.title);
+                            window.UI.toast(`🔔 ${payload.notification.title}: ${payload.notification.body}`);
+                            // Odświeżamy widok, żeby zobaczyć nowe zmiany
+                            if(window.Router) window.App.renderAll();
+                        });
                     } else {
-                        Logger.error("Nie można zapisać tokena. Brak User ID lub Tokena.");
+                        Logger.error("Błąd: Token jest pusty lub brak User ID.");
                     }
                 } else {
                     Logger.info("Brak zgody na powiadomienia");
                 }
-            } catch (e) { console.error("Błąd Push:", e); }
+            } catch (e) { 
+                Logger.error("Błąd Push (szczegóły):", e); 
+                console.log(e); // Wyświetli pełny błąd w konsoli
+            }
         },
 
         // Backend (Cloud Functions) zajmuje się wysyłaniem.
