@@ -754,13 +754,14 @@
             } catch (e) { throw new Error(e.message); }
         },
 
-        fetchUser: async (email) => {
+       fetchUser: async (email) => {
             if (!email) return null;
             try {
                 const fs = DataService.fs();
                 const q = fs.query(DataService.getCollectionRef('users'), fs.where("email", "==", email));
                 const snap = await fs.getDocs(q);
-                return snap.empty ? null : { email, ...snap.docs[0].data() };
+                // FIX: Musimy zwrócić też ID dokumentu, żeby móc go potem edytować (dodać token)
+                return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
             } catch (e) { Logger.error("Fetch User", e); return null; }
         }
     };
@@ -871,14 +872,22 @@
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
+                    Logger.info("Zgoda na powiadomienia: JEST");
+                    
+                    // TU WKLEJ KLUCZ Z KROKU 2 (Firebase Console -> Project Settings -> Cloud Messaging)
                     const vapidKey = "BGUTGgQgo-SdzuGNSRdI-GzEBfKlWwgC-YsLieL2BOEWec02Wer2ESGOOZzT0eDhj_N1DGapaiFTVsiXpqBvSV4"; 
-                    if (vapidKey.includes("TU_WKLEJ")) return console.warn("Powiadomienia: Brak klucza VAPID");
-
+                    
                     const token = await window.Services.getToken(window.Services.messaging, { vapidKey });
+                    Logger.info("Token pobrany:", token ? "TAK (końcówka: " + token.slice(-5) + ")" : "NIE");
+
                     if (token && State.user && State.user.id) {
                         await DataService.saveDoc('users', { pushToken: token }, State.user.id);
-                        Logger.info("Powiadomienia aktywne");
+                        Logger.info("Token zapisany w bazie dla usera: " + State.user.email);
+                    } else {
+                        Logger.error("Nie można zapisać tokena. Brak User ID lub Tokena.");
                     }
+                } else {
+                    Logger.info("Brak zgody na powiadomienia");
                 }
             } catch (e) { console.error("Błąd Push:", e); }
         },
