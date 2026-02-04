@@ -875,42 +875,44 @@
                 if (permission === 'granted') {
                     Logger.info("Zgoda na powiadomienia: JEST");
                     
-                    // TU WKLEJ SWÓJ NOWY PUBLICZNY KLUCZ (VAPID) Z KONSOLI FIREBASE
-                    // Musi zaczynać się od litery 'B' (np. BKom...)
+                    // --- WAŻNE: TU MUSI BYĆ TWÓJ KLUCZ (ZACZYNA SIĘ OD 'B') ---
                     const vapidKey = "BKiEDyHlpFwVy6XuA_YeRkgPPbrH1kJPC6kos4C2j5Hd6JDM6mBOGtfXicEvsp31OXJdXxD13WCAJi49oePOg-I"; 
 
-                    // FIX: Ręczna rejestracja Service Workera (Anteny)
-                    // To usuwa problemy z "nieznalezionym plikiem"
-                    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                    // 1. Rejestrujemy plik (Antenę)
+                    await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+
+                    // 2. FIX: Czekamy, aż przeglądarka potwierdzi, że Service Worker jest GOTOWY i AKTYWNY
+                    // To naprawia błąd "no active Service Worker"
+                    const registration = await navigator.serviceWorker.ready;
+                    Logger.info("Service Worker (Antena): GOTOWY");
                     
-                    // Pobieramy token, używając konkretnej rejestracji
+                    // 3. Teraz bezpiecznie pobieramy token
                     const token = await window.Services.getToken(window.Services.messaging, { 
                         vapidKey: vapidKey,
                         serviceWorkerRegistration: registration 
                     });
 
-                    Logger.info("Token pobrany: " + (token ? "TAK (długość: " + token.length + ")" : "PUSTY"));
+                    Logger.info("Token pobrany: " + (token ? "TAK" : "PUSTY"));
 
                     if (token && State.user && State.user.id) {
                         await DataService.saveDoc('users', { pushToken: token }, State.user.id);
-                        Logger.info("Token zapisany w bazie dla usera: " + State.user.email);
+                        Logger.info("Token zapisany w bazie dla: " + State.user.email);
                         
-                        // Obsługa powiadomień na żywo (Foreground)
                         window.Services.onMessage(window.Services.messaging, (payload) => {
-                            Logger.info("Powiadomienie na żywo: " + payload.notification.title);
-                            window.UI.toast(`🔔 ${payload.notification.title}: ${payload.notification.body}`);
-                            // Odświeżamy widok, żeby zobaczyć nowe zmiany
+                            Logger.info("Powiadomienie: " + payload.notification.title);
+                            window.UI.toast(`🔔 ${payload.notification.title}`);
                             if(window.Router) window.App.renderAll();
                         });
-                    } else {
-                        Logger.error("Błąd: Token jest pusty lub brak User ID.");
                     }
                 } else {
                     Logger.info("Brak zgody na powiadomienia");
                 }
             } catch (e) { 
-                Logger.error("Błąd Push (szczegóły):", e); 
-                console.log(e); // Wyświetli pełny błąd w konsoli
+                Logger.error("Błąd Push:", e);
+                // Jeśli plik nie istnieje, powiedz o tym
+                if (e.message && e.message.includes("script")) {
+                    console.error("CZY PLIK firebase-messaging-sw.js ISTNIEJE W FOLDERZE?");
+                }
             }
         },
 
