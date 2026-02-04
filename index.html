@@ -876,7 +876,7 @@
                     Logger.info("Zgoda na powiadomienia: JEST");
                     
                     // TU WKLEJ KLUCZ Z KROKU 2 (Firebase Console -> Project Settings -> Cloud Messaging)
-                    const vapidKey = "BGUTGgQgo-SdzuGNSRdI-GzEBfKlWwgC-YsLieL2BOEWec02Wer2ESGOOZzT0eDhj_N1DGapaiFTVsiXpqBvSV4"; 
+                    const vapidKey = "BKiEDyHlpFwVy6XuA_YeRkgPPbrH1kJPC6kos4C2j5Hd6JDM6mBOGtfXicEvsp31OXJdXxD13WCAJi49oePOg-I"; 
                     
                     const token = await window.Services.getToken(window.Services.messaging, { vapidKey });
                     Logger.info("Token pobrany:", token ? "TAK (końcówka: " + token.slice(-5) + ")" : "NIE");
