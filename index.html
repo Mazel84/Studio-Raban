@@ -556,8 +556,9 @@
             setRenderCallback(() => window.App.renderAll());
 
             const start = () => {
-                const auth = DataService.fs().auth;
-                DataService.fs().onAuthStateChanged(auth, async (user) => {
+                // FIX: Używamy globalnego window.Services zamiast DataService.fs()
+                const auth = window.Services.auth;
+                window.Services.onAuthStateChanged(auth, async (user) => {
                     UI.toggleLoader(true);
                     if (user && user.email) {
                         const userData = await DataService.fetchUser(user.email);
@@ -571,8 +572,9 @@
                             window.App.initNotifications();
                             window.Router.go('dashboard');
                         } else {
-                            await DataService.fs().signOut(auth);
+                            await window.Services.signOut(auth); // <--- POPRAWKA
                             SafeDOM.setVisible('view-login', true);
+                        }
                         }
                     } else {
                         SafeDOM.setVisible('view-login', true);
