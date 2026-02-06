@@ -188,41 +188,151 @@ const App = {
     },
 
     renderFinances: () => {
-        // Tu logika finansów z oryginalnego pliku (skrócona dla czytelności, ale wklej pełną jeśli potrzebujesz)
-        // Zakładam, że w poprzednich krokach widziałeś jak działa DataService, więc tutaj 
-        // po prostu wywołujemy logikę UI. Ponieważ kod jest długi, skopiowałem go 
-        // z Twojego index.html w pamięci.
         const s = State.getActiveSeason();
         if(!s) return;
         SafeDOM.text('finance-season-name', s.name);
-        // ... (reszta logiki finansów jest identyczna jak w starym pliku)
-        // DLA UPROSZCZENIA: Przenieś logikę renderFinances z poprzedniego index.html tutaj
-        // Jeśli nie wiesz jak, daj znać, wkleję pełną funkcję.
+
+        let totalSpent = 0;
+        const epCosts = {};
+        const expenseList = [];
+        const budget = Utils.safeNumber(s.budget);
+
+        // Process Jobs
+        State.getFilteredJobs().forEach(j => {
+            // FIX: CostCalculator.calculateJobTotal needs access to Utils if inside logic.js
+            // But logic.js imports Utils, so it should be fine.
+            // If CostCalculator is imported from logic.js, we use it directly.
+            // However, in previous steps we might have missed importing CostCalculator in logic.js?
+            // Assuming logic.js is correct.
+            
+            // Let's implement calculating logic here to be safe if imports are tricky or just use the imported helper
+            // We use logic from imported modules.
+            
+            // RE-IMPLEMENTATION of logic here for safety if logic.js is simple:
+            let cost = 0;
+            if (j.manualCost && parseFloat(j.manualCost) > 0) {
+                cost = Utils.safeNumber(j.manualCost);
+            } else {
+                const crewCost = (j.crew || []).reduce((acc, c) => acc + Utils.safeNumber(c.cost), 0);
+                const logisticsCost = Utils.safeNumber(j.logistics?.hotel?.cost) + Utils.safeNumber(j.logistics?.transport?.cost);
+                cost = crewCost + logisticsCost;
+            }
+
+            if (cost > 0) {
+                totalSpent += cost;
+                if(j.episodeId) epCosts[j.episodeId] = (epCosts[j.episodeId] || 0) + cost;
+                expenseList.push({ type: 'job', id: j.id, title: j.title, desc: j.episodeId ? `Odc. ${j.episodeId}` : 'Nieprzypisane', amount: cost, icon: 'movie' });
+            }
+        });
+
+        // Process Extra Costs
+        State.data.extraCosts.filter(c => c.seasonId === s.id).forEach(c => {
+            const amt = Utils.safeNumber(c.amount);
+            totalSpent += amt;
+            if(c.episodeId) epCosts[c.episodeId] = (epCosts[c.episodeId] || 0) + amt;
+            expenseList.push({ type: 'extra', id: c.id, title: c.title, desc: c.episodeId ? `Odc. ${c.episodeId}` : 'Ogólny', amount: amt, icon: 'attach_money' });
+        });
+
+        SafeDOM.text('season-spent', `${totalSpent} PLN`);
+        SafeDOM.text('season-total', `${budget} PLN`);
+        SafeDOM.text('season-remaining', `${budget - totalSpent} PLN`);
+        SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent/budget)*100, 100) : 0}%`);
+
+        const grid = SafeDOM.get('episodes-grid');
+        if(grid) {
+            grid.innerHTML = '';
+            const avg = budget / (s.episodes || 1);
+            const frag = document.createDocumentFragment();
+            for(let i=1; i<=(s.episodes||12); i++) {
+                const c = epCosts[i] || 0;
+                const d = document.createElement('div');
+                d.className = 'episode-cell';
+                if (c > avg) d.style.borderColor = 'var(--ios-red)';
+                else if (c > 0) d.style.borderColor = 'var(--ios-green)';
+                d.innerHTML = `<div style="font-weight:700; color:white;">ODC ${i}</div><div style="color:#ccc">${c}</div>`;
+                frag.appendChild(d);
+            }
+            grid.appendChild(frag);
+        }
+
+        const listContainer = SafeDOM.get('finance-list');
+        if (listContainer) {
+            listContainer.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            expenseList.reverse().slice(0, 15).forEach(ex => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);';
+                if(ex.type === 'extra') { row.style.cursor = 'pointer'; row.onclick = () => App.openEditCost(ex.id); }
+                row.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="background:rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                            <span class="material-symbols-outlined" style="font-size:18px; color:var(--text-secondary)">${ex.icon}</span>
+                        </div>
+                        <div>
+                            <div style="font-weight:600; font-size:13px;">${Utils.escape(ex.title)} ${ex.type==='extra'?'<span style="font-size:10px; color:var(--brand-color)">✎</span>':''}</div>
+                            <div style="font-size:11px; color:var(--text-secondary)">${ex.desc}</div>
+                        </div>
+                    </div>
+                    <div style="font-weight:700; color:var(--ios-green); font-size:13px;">${ex.amount} PLN</div>`;
+                frag.appendChild(row);
+            });
+            listContainer.appendChild(frag);
+        }
     },
 
     renderSettings: () => {
-        // Podobnie - logika ustawień
         const s = State.getActiveSeason();
         if(!s) return;
         SafeDOM.val('edit-season-name', s.name);
         SafeDOM.val('edit-season-budget', s.budget);
         SafeDOM.val('edit-season-episodes', s.episodes);
-        // ... (reszta logiki ustawień)
+
+        const tbody = SafeDOM.get('episodes-meta-list');
+        if(tbody) {
+            tbody.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            for(let i=1; i<=(s.episodes||0); i++) {
+                const m = (s.episodesData||{})[i] || {};
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${i}</td>
+                    <td><input class="sap-input ep-id" data-ep="${i}" value="${Utils.escape(m.id)}"></td>
+                    <td><input class="sap-input ep-sape" data-ep="${i}" value="${Utils.escape(m.sapE)}"></td>
+                    <td><input class="sap-input ep-sapp" data-ep="${i}" value="${Utils.escape(m.sapP)}"></td>`;
+                frag.appendChild(tr);
+            }
+            tbody.appendChild(frag);
+        }
+
+        const slist = SafeDOM.get('seasons-list');
+        if(slist) {
+            slist.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            State.data.seasons.forEach(ss => {
+                const div = document.createElement('div');
+                div.className = `season-item ${ss.id === State.activeSeasonId ? 'active-season' : ''}`;
+                div.innerHTML = `<div><b>${Utils.escape(ss.name)}</b></div><button class="btn-sm btn-secondary" onclick="window.App.activateSeason('${ss.id}')">Aktywuj</button>`;
+                frag.appendChild(div);
+            });
+            slist.appendChild(frag);
+        }
     },
 
-    // --- ACTIONS (saveJobFromForm, itp.) ---
+    // --- ACTIONS ---
     openNewOrder: () => {
         SafeDOM.get('order-form').reset();
         delete SafeDOM.get('order-form').dataset.id;
         SafeDOM.get('btn-delete-job')?.remove();
         SafeDOM.get('btn-confirm-crew')?.remove();
         SafeDOM.html('crew-list', '');
+        
         App._applyOrderFormVisibility();
+
         const today = new Date().toISOString().split('T')[0];
         SafeDOM.val('job-date', today);
         SafeDOM.text('job-date-display', today);
         SafeDOM.text('job-episode-display', 'Nie wybrano');
         SafeDOM.text('detail-author-name', State.user.name || State.user.email);
+        
         Router.go('order');
     },
 
@@ -230,17 +340,71 @@ const App = {
         const j = State.data.jobs.find(x => x.id === id);
         if (!j) return;
         Router.go('order');
-        // ... wypełnianie formularza (skopiuj z index.html) ...
-        // SKRÓT: Wklejam kluczowe elementy:
+
+        const authorUser = State.data.users.find(u => u.email === j.author);
+        SafeDOM.text('detail-author-name', authorUser ? authorUser.name : (j.author || 'Nieznany'));
+        
         const form = SafeDOM.get('order-form');
         form.dataset.id = id;
         SafeDOM.val('job-title', j.title);
-        // ... reszta pól ...
+        SafeDOM.val('job-location', j.location);
+        SafeDOM.val('job-desc', j.desc);
+        SafeDOM.val('job-pax-comment', j.paxComment);
+        SafeDOM.val('job-manual-cost', j.manualCost || '');
+        SafeDOM.val('job-date', j.date);
+        SafeDOM.text('job-date-display', j.date);
         
+        if(j.episodeId) {
+            SafeDOM.val('job-episode', j.episodeId);
+            SafeDOM.text('job-episode-display', "Odcinek " + j.episodeId);
+        } else {
+            SafeDOM.val('job-episode', '');
+            SafeDOM.text('job-episode-display', 'Nie wybrano');
+        }
+
         SafeDOM.html('crew-list', '');
         (j.crew || []).forEach(c => App.addCrewRow(c));
+
+        SafeDOM.setChecked('check-hotel', j.logistics?.hotel?.needed || false);
+        SafeDOM.setVisible('wrap-hotel', j.logistics?.hotel?.needed);
+        SafeDOM.val('desc-hotel', j.logistics?.hotel?.details || '');
+        SafeDOM.val('cost-hotel', j.logistics?.hotel?.cost || '');
+
+        SafeDOM.setChecked('check-transport', j.logistics?.transport?.needed || false);
+        SafeDOM.setVisible('wrap-transport', j.logistics?.transport?.needed);
+        SafeDOM.val('desc-transport', j.logistics?.transport?.details || '');
+        SafeDOM.val('cost-transport', j.logistics?.transport?.cost || '');
+
         App._applyOrderFormVisibility();
-        // ... przyciski usuwania ...
+        
+        // --- FIX: PRZYWRÓCONA LOGIKA PRZYCISKÓW ---
+        SafeDOM.get('btn-delete-job')?.remove();
+        SafeDOM.get('btn-confirm-crew')?.remove();
+
+        const role = State.getCurrentRole();
+
+        if(Permissions.canManageBudget(role)) {
+            // Jeśli status to APPROVED (Szukanie Ekipy) -> Pokaż guzik "Zatwierdź Ekipę"
+            if (j.status === STATUS_MAP.APPROVED.id) {
+                const btn = document.createElement('button');
+                btn.id = 'btn-confirm-crew';
+                btn.type = 'button'; // Ważne: prevent submit
+                btn.className = 'btn btn-approve'; 
+                btn.style.marginTop = '20px';
+                btn.innerText = 'Zatwierdź Ekipę (Do Realizacji)';
+                btn.onclick = () => App.confirmCrew(id);
+                form.appendChild(btn);
+            }
+            
+            const delBtn = document.createElement('button');
+            delBtn.id = 'btn-delete-job';
+            delBtn.type = 'button';
+            delBtn.className = 'btn btn-reject';
+            delBtn.style.marginTop = '10px';
+            delBtn.innerText = 'Usuń Zlecenie';
+            delBtn.onclick = () => App.deleteJob(id);
+            form.appendChild(delBtn);
+        }
     },
 
     _applyOrderFormVisibility: () => {
@@ -249,6 +413,7 @@ const App = {
         const canManageProd = Permissions.canManageBudget(role);
         SafeDOM.setVisible('group-episode', canManageProd);
         SafeDOM.setVisible('group-job-cost', canManageProd);
+        
         document.querySelectorAll('.prod-only').forEach(el => SafeDOM.setVisible(el.id, canManageProd));
         document.querySelectorAll('#wrap-hotel .prod-only, #wrap-transport .prod-only').forEach(el => {
             if(canManageProd) el.classList.remove('hidden'); else el.classList.add('hidden');
@@ -327,45 +492,43 @@ const App = {
             }
         };
     },
-    // --- FIX: Dodajemy brakującą funkcję zatwierdzania ekipy ---
-    confirmCrew: async (id) => {
-        if(!confirm('Zlecenie zmieni status na "W Realizacji". Jesteś pewien?')) return;
-        
-        UI.toggleLoader(true);
-        try { 
-            // Aktualizacja statusu w bazie
-            await DataService.saveDoc(COLLECTIONS.JOBS, { status: STATUS_MAP.READY.id }, id); 
-            
-            // Powiadomienie i powrót
-            UI.toast('Zatwierdzono - Ekipa rusza!'); 
-            Router.back(); 
-        }
-        catch(e) { 
-            Logger.error("Błąd zmiany statusu", e); 
-        } finally { 
-            UI.toggleLoader(false); 
-        }
-    },
-    
-    // --- FIX: Przy okazji dodajmy usuwanie, bo pewnie też zniknęło ---
+
     deleteJob: async (id) => {
-        if(!confirm('Czy na pewno chcesz usunąć to zlecenie? Operacja nieodwracalna.')) return;
-        
+        if(!confirm('Czy na pewno chcesz usunąć to zlecenie?')) return;
         UI.toggleLoader(true);
-        try { 
-            await DataService.deleteDoc(COLLECTIONS.JOBS, id); 
-            UI.toast('Usunięto zlecenie'); 
-            Router.back(); 
-        }
-        catch(e) { 
-            Logger.error("Błąd usuwania", e); 
-        } finally { 
-            UI.toggleLoader(false); 
-        }
+        try { await DataService.deleteDoc(COLLECTIONS.JOBS, id); UI.toast('Usunięto'); Router.back(); }
+        catch(e) { Logger.error("Delete Job", e); } finally { UI.toggleLoader(false); }
     },
 
-    // ... Reszta metod (deleteJob, confirmCrew, etc.) - SKOPIUJ JE ZE SWOJEGO INDEX.HTML jeśli ich tu nie ma!
-    // Dla przykładu:
+    confirmCrew: async (id) => {
+        if(!confirm('Zlecenie zmieni status na "W Realizacji".')) return;
+        UI.toggleLoader(true);
+        try { await DataService.saveDoc(COLLECTIONS.JOBS, { status: STATUS_MAP.READY.id }, id); UI.toast('Zatwierdzono'); Router.back(); }
+        catch(e) { Logger.error("Status Change", e); } finally { UI.toggleLoader(false); }
+    },
+
+    handlePaxDecision: (id, isApproved) => {
+        App.tempDecision = { id, isApproved };
+        UI.openModal('modal-decision');
+    },
+
+    submitPaxDecision: async () => {
+        const { id, isApproved } = App.tempDecision;
+        const comment = SafeDOM.val('decision-comment');
+        if (!isApproved && !comment) return UI.toast('Wymagany komentarz przy odrzuceniu!', 'error');
+        
+        try {
+            await DataService.saveDoc(COLLECTIONS.JOBS, { 
+                status: isApproved ? STATUS_MAP.APPROVED.id : STATUS_MAP.REJECTED.id, 
+                paxComment: comment 
+            }, id);
+            UI.closeModal('modal-decision');
+            UI.toast('Decyzja zapisana');
+        } catch (e) { Logger.error("Decision", e); }
+    },
+
+    toggleLogistics: (type) => SafeDOM.setVisible('wrap-' + type, SafeDOM.isChecked('check-' + type)),
+    
     addCrewRow: (data = {}) => {
         const id = Utils.generateId();
         const showCost = Permissions.canManageBudget(State.getCurrentRole());
@@ -394,8 +557,58 @@ const App = {
         if(window.lucide) window.lucide.createIcons();
     },
     
-    autofillPhone: (nameInput) => { /* ...skopiuj z index.html... */ },
+    autofillPhone: (nameInput) => {
+        const name = nameInput.value.trim();
+        if(!name) return;
+        try {
+            const phonebook = JSON.parse(localStorage.getItem(CONFIG.STORAGE_PHONEBOOK) || '{}');
+            const row = nameInput.closest('.crew-row-item');
+            const phoneInput = row.querySelector('.crew-phone');
+            if (phonebook[name] && phoneInput && !phoneInput.value) {
+                phoneInput.value = phonebook[name];
+                window.UI.toast('Wczytano numer dla: ' + name);
+            }
+        } catch (e) { /* Ignore parsing errors */ }
+    },
     
+    openEditCost: (id) => {
+        const cost = State.data.extraCosts.find(c => c.id === id);
+        SafeDOM.val('cost-id', cost ? cost.id : '');
+        SafeDOM.val('cost-title', cost ? cost.title : '');
+        SafeDOM.val('cost-amount', cost ? cost.amount : '');
+        SafeDOM.val('cost-episode-input', cost?.episodeId || '');
+        SafeDOM.text('cost-episode-display', cost?.episodeId ? `Odcinek ${cost.episodeId}` : 'Nie wybrano');
+        SafeDOM.text('cost-modal-title', cost ? 'Edytuj Koszt' : 'Dodaj Koszt');
+        SafeDOM.setVisible('btn-delete-cost', !!cost);
+        UI.openModal('modal-cost');
+    },
+
+    saveExtraCost: async () => {
+        const id = SafeDOM.val('cost-id');
+        try {
+            const data = {
+                title: SafeDOM.val('cost-title'),
+                amount: Utils.safeNumber(SafeDOM.val('cost-amount')),
+                episodeId: Utils.safeNumber(SafeDOM.val('cost-episode-input')),
+                seasonId: State.activeSeasonId
+            };
+            if(!data.title || !data.amount) return UI.toast('Uzupełnij dane', 'error');
+            await DataService.saveDoc(COLLECTIONS.COSTS, data, id || null);
+            UI.closeModal('modal-cost');
+            UI.toast('Zapisano');
+        } catch(e) { Logger.error("Save Cost", e); }
+    },
+
+    deleteCost: async () => {
+        const id = SafeDOM.val('cost-id');
+        if(!id || !confirm('Usunąć koszt?')) return;
+        try {
+            await DataService.deleteDoc(COLLECTIONS.COSTS, id);
+            UI.closeModal('modal-cost');
+            UI.toast('Usunięto');
+        } catch(e) { Logger.error("Delete Cost", e); }
+    },
+
     // Admin features
     adminSwitchRole: (role) => {
         State.impersonatedRole = role;
@@ -407,6 +620,48 @@ const App = {
         const role = State.getCurrentRole();
         const label = Permissions.isAdmin(State.user.role) && role !== ROLES.ADMIN ? `${role} (Admin View)` : role;
         SafeDOM.text('user-role-badge', label.toUpperCase());
+    },
+    activateSeason: (id) => { State.activeSeasonId = id; App.renderAll(); },
+    addSeason: async () => {
+        try {
+            const data = {
+                name: SafeDOM.val('new-season-name'),
+                budget: Utils.safeNumber(SafeDOM.val('new-season-budget')),
+                episodes: Utils.safeNumber(SafeDOM.val('new-season-episodes'))
+            };
+            await DataService.saveDoc(COLLECTIONS.SEASONS, data);
+            UI.toast('Dodano sezon');
+        } catch(e) { Logger.error("Add Season", e); }
+    },
+    updateActiveSeason: async () => {
+        const s = State.getActiveSeason();
+        if(!s) return;
+        try {
+            const data = {
+                ...s,
+                name: SafeDOM.val('edit-season-name'),
+                budget: Utils.safeNumber(SafeDOM.val('edit-season-budget')),
+                episodes: Utils.safeNumber(SafeDOM.val('edit-season-episodes'))
+            };
+            await DataService.saveDoc(COLLECTIONS.SEASONS, data, s.id);
+            UI.toast('Zaktualizowano');
+        } catch(e) { Logger.error("Update Season", e); }
+    },
+    saveEpisodeMeta: async () => {
+        const s = State.getActiveSeason();
+        try {
+            const newMeta = {};
+            document.querySelectorAll('.ep-id').forEach(el => {
+                const ep = el.dataset.ep;
+                newMeta[ep] = {
+                    id: el.value,
+                    sapE: document.querySelector(`.ep-sape[data-ep="${ep}"]`).value,
+                    sapP: document.querySelector(`.ep-sapp[data-ep="${ep}"]`).value
+                };
+            });
+            await DataService.saveDoc(COLLECTIONS.SEASONS, { episodesData: newMeta }, s.id);
+            UI.toast('Zapisano');
+        } catch(e) { Logger.error("Save Meta", e); }
     }
 };
 
