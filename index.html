@@ -1139,7 +1139,7 @@
         }
     };
 
-    // --- AUTH CONTROLLER ---
+   // --- AUTH CONTROLLER ---
     window.Auth = {
         mode: 'login',
         selectedRole: ROLES.REPORTER,
@@ -1162,12 +1162,15 @@
             try {
                 const email = SafeDOM.val(Auth.mode === 'login' ? 'login-email' : 'reg-email');
                 const pass = SafeDOM.val(Auth.mode === 'login' ? 'login-pass' : 'reg-pass');
-                const fs = DataService.fs();
+                
+                // FIX: Używamy globalnego serwisu zamiast starego DataService.fs()
+                const srv = window.Services;
+
                 if (Auth.mode === 'login') {
-                    await fs.signInWithEmailAndPassword(fs.auth, email, pass);
+                    await srv.signInWithEmailAndPassword(srv.auth, email, pass);
                 } else {
                     if (pass.length < 6) throw new Error("Hasło min. 6 znaków");
-                    await fs.createUserWithEmailAndPassword(fs.auth, email, pass);
+                    await srv.createUserWithEmailAndPassword(srv.auth, email, pass);
                     await DataService.saveDoc(COLLECTIONS.USERS, {
                         email: email,
                         name: SafeDOM.val('reg-name'),
@@ -1176,7 +1179,11 @@
                 }
             } catch (e) { Logger.error("Auth", e); } finally { UI.toggleLoader(false); }
         },
-        logout: async () => { await DataService.fs().signOut(DataService.fs().auth); location.reload(); }
+        logout: async () => { 
+            // FIX: Poprawione wylogowanie
+            await window.Services.signOut(window.Services.auth); 
+            location.reload(); 
+        }
     };
 
     // --- ROUTER ---
