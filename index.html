@@ -434,58 +434,9 @@
    // --- LOGIC & STATE ---
     import { Permissions, CostCalculator } from './js/logic.js';
     import { State } from './js/state.js';
-    
+
     // --- DATA SERVICE ---
-    const DataService = {
-        fs: () => window.Services,
-        getCollectionRef: (colName) => {
-            const fs = DataService.fs();
-            return fs.collection(fs.db, 'artifacts', fs.appId, 'public', 'data', colName);
-        },
-        initListeners: () => {
-            const subscribe = (colName, stateKey) => {
-                try {
-                    const ref = DataService.getCollectionRef(colName);
-                    DataService.fs().onSnapshot(ref, (snap) => {
-                        State.data[stateKey] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                        if (colName === COLLECTIONS.SEASONS && !State.activeSeasonId && State.data.seasons.length > 0) {
-                            State.activeSeasonId = State.data.seasons[0].id;
-                        }
-                        if (State.user) window.App.renderAll();
-                    }, (err) => Logger.error(`Listener ${colName}`, err));
-                } catch (e) { Logger.error(`Init ${colName}`, e); }
-            };
-            
-            subscribe(COLLECTIONS.USERS, 'users');
-            subscribe(COLLECTIONS.JOBS, 'jobs');
-            subscribe(COLLECTIONS.COSTS, 'extraCosts');
-            subscribe(COLLECTIONS.SEASONS, 'seasons');
-        },
-        saveDoc: async (colName, data, id = null) => {
-            try {
-                const fs = DataService.fs();
-                const finalId = id || Utils.generateId();
-                const docRef = fs.doc(fs.db, 'artifacts', fs.appId, 'public', 'data', colName, finalId);
-                await fs.setDoc(docRef, { ...data, id: finalId }, { merge: true });
-                return finalId;
-            } catch (e) { throw new Error(e.message); }
-        },
-        deleteDoc: async (colName, id) => {
-            try {
-                const fs = DataService.fs();
-                await fs.deleteDoc(fs.doc(fs.db, 'artifacts', fs.appId, 'public', 'data', colName, id));
-            } catch (e) { throw new Error(e.message); }
-        },
-        fetchUser: async (email) => {
-            if (!email) return null;
-            try {
-                const fs = DataService.fs();
-                const q = fs.query(DataService.getCollectionRef(COLLECTIONS.USERS), fs.where("email", "==", email));
-                const snap = await fs.getDocs(q);
-                return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
-            } catch (e) { Logger.error("Fetch User", e); return null; }
-        }
-    };
+    import { DataService, setRenderCallback } from './js/data-service.js';
 
     // --- UI CONTROLLER ---
     window.UI = {
@@ -602,6 +553,8 @@
         },
 
         init: () => {
+            setRenderCallback(() => window.App.renderAll());
+
             const start = () => {
                 const auth = DataService.fs().auth;
                 DataService.fs().onAuthStateChanged(auth, async (user) => {
