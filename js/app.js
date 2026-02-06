@@ -327,6 +327,42 @@ const App = {
             }
         };
     },
+    // --- FIX: Dodajemy brakującą funkcję zatwierdzania ekipy ---
+    confirmCrew: async (id) => {
+        if(!confirm('Zlecenie zmieni status na "W Realizacji". Jesteś pewien?')) return;
+        
+        UI.toggleLoader(true);
+        try { 
+            // Aktualizacja statusu w bazie
+            await DataService.saveDoc(COLLECTIONS.JOBS, { status: STATUS_MAP.READY.id }, id); 
+            
+            // Powiadomienie i powrót
+            UI.toast('Zatwierdzono - Ekipa rusza!'); 
+            Router.back(); 
+        }
+        catch(e) { 
+            Logger.error("Błąd zmiany statusu", e); 
+        } finally { 
+            UI.toggleLoader(false); 
+        }
+    },
+    
+    // --- FIX: Przy okazji dodajmy usuwanie, bo pewnie też zniknęło ---
+    deleteJob: async (id) => {
+        if(!confirm('Czy na pewno chcesz usunąć to zlecenie? Operacja nieodwracalna.')) return;
+        
+        UI.toggleLoader(true);
+        try { 
+            await DataService.deleteDoc(COLLECTIONS.JOBS, id); 
+            UI.toast('Usunięto zlecenie'); 
+            Router.back(); 
+        }
+        catch(e) { 
+            Logger.error("Błąd usuwania", e); 
+        } finally { 
+            UI.toggleLoader(false); 
+        }
+    },
 
     // ... Reszta metod (deleteJob, confirmCrew, etc.) - SKOPIUJ JE ZE SWOJEGO INDEX.HTML jeśli ich tu nie ma!
     // Dla przykładu:
