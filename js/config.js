@@ -26,3 +26,4 @@ export const CONFIG = {
     VAPID_KEY: "BMm_qK8s5vJg9tZ4e1Xn3pL7o_uY6rW2iQ0aS8dF9hG5jK1lZ4xC3vB2nN7mM9", 
     STORAGE_PHONEBOOK: 'sr_phonebook'
 };
+
