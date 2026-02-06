@@ -552,11 +552,12 @@
             } catch (e) { console.error("Push Error (Silent)", e); }
         },
 
-        init: () => {
+       init: () => {
+            // Rejestracja odświeżania widoku
             setRenderCallback(() => window.App.renderAll());
 
             const start = () => {
-                // FIX: Używamy globalnego window.Services zamiast DataService.fs()
+                // Używamy globalnego serwisu
                 const auth = window.Services.auth;
                 window.Services.onAuthStateChanged(auth, async (user) => {
                     UI.toggleLoader(true);
@@ -572,9 +573,8 @@
                             window.App.initNotifications();
                             window.Router.go('dashboard');
                         } else {
-                            await window.Services.signOut(auth); // <--- POPRAWKA
+                            await window.Services.signOut(auth);
                             SafeDOM.setVisible('view-login', true);
-                        }
                         }
                     } else {
                         SafeDOM.setVisible('view-login', true);
