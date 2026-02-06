@@ -410,6 +410,26 @@
     import { ROLES, STATUS_MAP, COLLECTIONS, CONFIG } from './js/config.js';
 
    import { Utils, Logger, SafeDOM } from './js/utils.js';
+   
+   // --- FIREBASE INIT ---
+    import { 
+        auth, db, messaging, appId, 
+        getToken, onMessage, 
+        collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs,
+        signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged 
+    } from './js/firebase-init.js';
+
+    // FIX: Odtwarzamy window.Services dla starego kodu (DataService, Auth, App)
+    // To jest "Most", który pozwala działać staremu kodowi z nowymi modułami
+    window.Services = { 
+        auth, db, messaging, appId, 
+        getToken, onMessage,
+        collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs,
+        signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
+    };
+    
+    // Emitujemy zdarzenie gotowości (dla pewności)
+    window.dispatchEvent(new CustomEvent('firebase-ready'));
 
     // --- BUSINESS LOGIC HELPERS ---
     const Permissions = {
@@ -1332,38 +1352,6 @@
 
 </script>
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-    import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-messaging.js';
 
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-        apiKey: "AIzaSyDVtvXvX-02DVsPn-97zrUCfVN9t9H1dOs",
-        authDomain: "raban-7d606.firebaseapp.com",
-        projectId: "raban-7d606",
-        storageBucket: "raban-7d606.firebasestorage.app",
-        messagingSenderId: "57735110728",
-        appId: "1:57735110728:web:1dc86035fc8d01f766f87d"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const messaging = getMessaging(app);
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'studio-raban-prod';
-
-    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        signInWithCustomToken(auth, __initial_auth_token).catch(e => console.error("Custom token error", e));
-    }
-
-    window.Services = { 
-        app, auth, db, messaging, getToken, onMessage, appId,
-        collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, setDoc, where, getDocs,
-        signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
-    };
-
-    window.dispatchEvent(new CustomEvent('firebase-ready'));
-</script>
 </body>
 </html>
