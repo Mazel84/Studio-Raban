@@ -151,7 +151,7 @@
         <div class="input-group" style="flex-direction:row; align-items:center; gap:10px; margin: 15px 0;">
     <input type="checkbox" id="reg-terms" style="width:20px; height:20px; accent-color:var(--brand-color);">
     <label for="reg-terms" style="font-size:13px; color:#ccc; margin:0;">
-        Akceptuję <a href="#" onclick="window.UI.openModal('modal-terms'); return false;" style="color:var(--brand-color); text-decoration:underline;">Regulamin (BETA)</a>
+        Oświadczam, że zapoznałem/am się z <a href="#" onclick="window.UI.openModal('modal-terms'); return false;" style="color:var(--brand-color); text-decoration:underline;">Notą Prawną i Zasadami (Disclaimer)</a>
     </label>
 </div>
        
@@ -447,43 +447,32 @@
 
 <div id="modal-terms" class="modal-overlay">
     <div class="modal-content" style="max-width: 600px; max-height: 80vh; display:flex; flex-direction:column;">
-        <h3 style="margin-top:0;">Regulamin Narzędzia (BETA)</h3>
+        <h3 style="margin-top:0; color:var(--ios-red);">⚠️ NOTA PRAWNA I ZASADY UŻYTKOWANIA</h3>
         
-        <div style="overflow-y: auto; padding-right: 10px; text-align: left; font-size: 13px; line-height: 1.5; color: #ddd; flex:1;">
+        <div style="overflow-y: auto; padding-right: 10px; text-align: left; font-size: 13px; line-height: 1.6; color: #ddd; flex:1;">
             
-            <h4 style="color:white; margin:15px 0 5px;">§ 1. Postanowienia ogólne i charakter narzędzia</h4>
-            <p>1. Niniejsze narzędzie (zwane dalej „Aplikacją”) jest autorskim, prywatnym projektem stworzonym w celach testowych i pomocniczych, mającym na celu wyłącznie ułatwienie bieżącej organizacji pracy zespołu produkcyjnego.</p>
-            <p>2. <b>Aplikacja nie jest oficjalnym oprogramowaniem</b> dostarczonym, autoryzowanym ani serwisowanym przez Zleceniodawcę/Pracodawcę (Telewizja Polska S.A.).</p>
-            <p>3. Twórcą i administratorem technicznym Aplikacji jest Marcin Mazelewski (dalej: „Twórca”).</p>
-            <p>4. Dostęp do Aplikacji jest dobrowolny, bezpłatny i udzielany wyłącznie wskazanym przez Twórcę współpracownikom (dalej: „Użytkownicy”).</p>
+            <h4 style="color:white; margin:15px 0 5px;">1. Charakter narzędzia (Prywatny Notatnik)</h4>
+            <p>Niniejsza aplikacja stanowi wyłącznie <b>prywatne, cyfrowe narzędzie notatkowe (tzw. "Digital Assistant")</b> stworzone na potrzeby własne użytkownika, służące do doraźnej organizacji pracy osobistej.</p>
+            <p>Narzędzie to <b>nie jest Systemem Informatycznym Telewizji Polskiej S.A.</b>, nie jest zintegrowane z jej infrastrukturą i nie służy do oficjalnego archiwizowania dokumentów.</p>
 
-            <h4 style="color:white; margin:15px 0 5px;">§ 2. Zakres odpowiedzialności (Kluczowe)</h4>
-            <p>1. <b>Brak gwarancji:</b> Aplikacja jest udostępniana w fazie testowej („as is”). Twórca nie udziela żadnych gwarancji co do jej bezbłędnego działania, dostępności (uptime) oraz poprawności generowanych danych.</p>
-            <p>2. <b>Weryfikacja danych:</b> Aplikacja pełni funkcję wyłącznie pomocniczą. Użytkownik zobowiązany jest do samodzielnej weryfikacji wszystkich danych (w szczególności finansowych, harmonogramów i danych kontaktowych) przed ich oficjalnym wykorzystaniem w dokumentach produkcyjnych.</p>
-            <p>3. <b>Wyłączenie odpowiedzialności:</b> Twórca nie ponosi odpowiedzialności za:
-                <ul style="padding-left: 20px; margin: 5px 0;">
-                    <li>Szkody wynikłe z błędnego działania Aplikacji (np. błędy w obliczeniach budżetowych).</li>
-                    <li>Utratę danych wprowadzonych do Aplikacji.</li>
-                    <li>Decyzje podjęte przez Użytkowników na podstawie sugestii wygenerowanych przez AI w Aplikacji.</li>
-                    <li>Problemy techniczne wynikające z działania dostawców zewnętrznych.</li>
-                </ul>
-            </p>
+            <h4 style="color:white; margin:15px 0 5px;">2. Status Danych (Kopia Robocza)</h4>
+            <p>Wszelkie dane wprowadzane do aplikacji (w tym harmonogramy, numery telefonów, szacunki kosztów) mają status <b>kopii roboczych i brudnopisu</b>.</p>
+            <ul style="padding-left: 20px; margin: 5px 0;">
+                <li><b>Zabrania się</b> wprowadzania do aplikacji danych objętych klauzulą "Poufne" lub "Tajne" w rozumieniu polityki bezpieczeństwa TVP.</li>
+                <li><b>Zabrania się</b> traktowania danych z aplikacji jako wiążących. Jedynym źródłem prawdy są oficjalne systemy korporacyjne (SAP, oficjalne maile, dyski sieciowe TVP).</li>
+            </ul>
 
-            <h4 style="color:white; margin:15px 0 5px;">§ 3. Bezpieczeństwo danych i poufność</h4>
-            <p>1. <b>Zakaz udostępniania:</b> Użytkownik zobowiązuje się do nieudostępniania dostępu do Aplikacji (loginów, haseł, linków) osobom trzecim spoza ścisłego zespołu produkcyjnego.</p>
-            <p>2. <b>Własność danych:</b> Użytkownik przyjmuje do wiadomości, że dane wprowadzane do Aplikacji (w szczególności dane osobowe i finansowe) stanowią tajemnicę przedsiębiorstwa głównego Zleceniodawcę/Pracodawcy.</p>
-            <p>3. <b>Zakaz kopiowania:</b> Zabrania się kopiowania, eksportowania lub wykorzystywania danych z Aplikacji do celów prywatnych lub innych niż związane z realizacją produkcji.</p>
-            <p>4. <b>RODO:</b> Użytkownik zobowiązuje się nie wprowadzać do Aplikacji nadmiarowych danych wrażliwych.</p>
+            <h4 style="color:white; margin:15px 0 5px;">3. Anonimizacja (Ochrona RODO)</h4>
+            <p>Użytkownik przyjmuje do wiadomości, że aplikacja wykorzystuje algorytmy AI do sortowania notatek. W związku z tym <b>zabrania się wprowadzania pełnych danych osobowych osób trzecich</b> (np. PESEL, adresy zamieszkania) oraz szczegółowych danych wrażliwych.</p>
+            <p>Zaleca się stosowanie <b>pseudonimizacji</b> (np. używanie inicjałów lub funkcji zamiast pełnych nazwisk przy wrażliwych kwotach).</p>
 
-            <h4 style="color:white; margin:15px 0 5px;">§ 4. Zakończenie korzystania</h4>
-            <p>Twórca zastrzega sobie prawo do wyłączenia Aplikacji w dowolnym momencie bez podania przyczyny i bez wcześniejszego uprzedzenia.</p>
+            <h4 style="color:white; margin:15px 0 5px;">4. Wyłączenie odpowiedzialności twórcy</h4>
+            <p>Narzędzie jest udostępniane współpracownikom na zasadzie <b>koleżeńskiej pomocy w organizacji (peer-to-peer sharing)</b>. Twórca narzędzia nie pełni roli Administratora Danych w rozumieniu RODO w imieniu korporacji, a jedynie udostępnia interfejs do zarządzania własnymi notatkami użytkownika.</p>
 
-            <h4 style="color:white; margin:15px 0 5px;">§ 5. Oświadczenie Użytkownika</h4>
-            <p>Rozpoczęcie korzystania z Aplikacji jest równoznaczne z akceptacją niniejszego Regulaminu oraz oświadczeniem, że Użytkownik jest świadomy eksperymentalnego charakteru narzędzia i korzysta z niego na własną odpowiedzialność.</p>
         </div>
 
         <div style="margin-top:20px; text-align:center;">
-            <button class="btn btn-primary" onclick="window.UI.closeModal('modal-terms')">Rozumiem, zamknij</button>
+            <button class="btn btn-primary" onclick="window.UI.closeModal('modal-terms')">Przeczytałem/am i Akceptuję</button>
         </div>
     </div>
 </div>
