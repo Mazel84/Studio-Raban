@@ -36,6 +36,7 @@ export const DataService = {
         subscribe(COLLECTIONS.JOBS, 'jobs');
         subscribe(COLLECTIONS.COSTS, 'extraCosts');
         subscribe(COLLECTIONS.SEASONS, 'seasons');
+        subscribe(COLLECTIONS.GLOBAL_BUDGETS, 'globalBudgets');
     },
 
     saveDoc: async (colName, data, id = null) => {

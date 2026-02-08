@@ -187,99 +187,6 @@ const App = {
         container.appendChild(frag);
     },
 
-    renderFinances: () => {
-        const s = State.getActiveSeason();
-        if(!s) return;
-        SafeDOM.text('finance-season-name', s.name);
-
-        let totalSpent = 0;
-        const epCosts = {};
-        const expenseList = [];
-        const budget = Utils.safeNumber(s.budget);
-
-        // Process Jobs
-        State.getFilteredJobs().forEach(j => {
-            // FIX: CostCalculator.calculateJobTotal needs access to Utils if inside logic.js
-            // But logic.js imports Utils, so it should be fine.
-            // If CostCalculator is imported from logic.js, we use it directly.
-            // However, in previous steps we might have missed importing CostCalculator in logic.js?
-            // Assuming logic.js is correct.
-            
-            // Let's implement calculating logic here to be safe if imports are tricky or just use the imported helper
-            // We use logic from imported modules.
-            
-            // RE-IMPLEMENTATION of logic here for safety if logic.js is simple:
-            let cost = 0;
-            if (j.manualCost && parseFloat(j.manualCost) > 0) {
-                cost = Utils.safeNumber(j.manualCost);
-            } else {
-                const crewCost = (j.crew || []).reduce((acc, c) => acc + Utils.safeNumber(c.cost), 0);
-                const logisticsCost = Utils.safeNumber(j.logistics?.hotel?.cost) + Utils.safeNumber(j.logistics?.transport?.cost);
-                cost = crewCost + logisticsCost;
-            }
-
-            if (cost > 0) {
-                totalSpent += cost;
-                if(j.episodeId) epCosts[j.episodeId] = (epCosts[j.episodeId] || 0) + cost;
-                expenseList.push({ type: 'job', id: j.id, title: j.title, desc: j.episodeId ? `Odc. ${j.episodeId}` : 'Nieprzypisane', amount: cost, icon: 'movie' });
-            }
-        });
-
-        // Process Extra Costs
-        State.data.extraCosts.filter(c => c.seasonId === s.id).forEach(c => {
-            const amt = Utils.safeNumber(c.amount);
-            totalSpent += amt;
-            if(c.episodeId) epCosts[c.episodeId] = (epCosts[c.episodeId] || 0) + amt;
-            expenseList.push({ type: 'extra', id: c.id, title: c.title, desc: c.episodeId ? `Odc. ${c.episodeId}` : 'Ogólny', amount: amt, icon: 'attach_money' });
-        });
-
-        SafeDOM.text('season-spent', `${totalSpent} PLN`);
-        SafeDOM.text('season-total', `${budget} PLN`);
-        SafeDOM.text('season-remaining', `${budget - totalSpent} PLN`);
-        SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent/budget)*100, 100) : 0}%`);
-
-        const grid = SafeDOM.get('episodes-grid');
-        if(grid) {
-            grid.innerHTML = '';
-            const avg = budget / (s.episodes || 1);
-            const frag = document.createDocumentFragment();
-            for(let i=1; i<=(s.episodes||12); i++) {
-                const c = epCosts[i] || 0;
-                const d = document.createElement('div');
-                d.className = 'episode-cell';
-                if (c > avg) d.style.borderColor = 'var(--ios-red)';
-                else if (c > 0) d.style.borderColor = 'var(--ios-green)';
-                d.innerHTML = `<div style="font-weight:700; color:white;">ODC ${i}</div><div style="color:#ccc">${c}</div>`;
-                frag.appendChild(d);
-            }
-            grid.appendChild(frag);
-        }
-
-        const listContainer = SafeDOM.get('finance-list');
-        if (listContainer) {
-            listContainer.innerHTML = '';
-            const frag = document.createDocumentFragment();
-            expenseList.reverse().slice(0, 15).forEach(ex => {
-                const row = document.createElement('div');
-                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05);';
-                if(ex.type === 'extra') { row.style.cursor = 'pointer'; row.onclick = () => App.openEditCost(ex.id); }
-                row.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:12px;">
-                        <div style="background:rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                            <span class="material-symbols-outlined" style="font-size:18px; color:var(--text-secondary)">${ex.icon}</span>
-                        </div>
-                        <div>
-                            <div style="font-weight:600; font-size:13px;">${Utils.escape(ex.title)} ${ex.type==='extra'?'<span style="font-size:10px; color:var(--brand-color)">✎</span>':''}</div>
-                            <div style="font-size:11px; color:var(--text-secondary)">${ex.desc}</div>
-                        </div>
-                    </div>
-                    <div style="font-weight:700; color:var(--ios-green); font-size:13px;">${ex.amount} PLN</div>`;
-                frag.appendChild(row);
-            });
-            listContainer.appendChild(frag);
-        }
-    },
-
     renderSettings: () => {
         const s = State.getActiveSeason();
         if(!s) return;
@@ -317,22 +224,19 @@ const App = {
         }
     },
 
-    // --- ACTIONS ---
+    // --- ACTIONS (saveJobFromForm, itp.) ---
     openNewOrder: () => {
         SafeDOM.get('order-form').reset();
         delete SafeDOM.get('order-form').dataset.id;
         SafeDOM.get('btn-delete-job')?.remove();
         SafeDOM.get('btn-confirm-crew')?.remove();
         SafeDOM.html('crew-list', '');
-        
         App._applyOrderFormVisibility();
-
         const today = new Date().toISOString().split('T')[0];
         SafeDOM.val('job-date', today);
         SafeDOM.text('job-date-display', today);
         SafeDOM.text('job-episode-display', 'Nie wybrano');
         SafeDOM.text('detail-author-name', State.user.name || State.user.email);
-        
         Router.go('order');
     },
 
@@ -384,11 +288,10 @@ const App = {
         const role = State.getCurrentRole();
 
         if(Permissions.canManageBudget(role)) {
-            // Jeśli status to APPROVED (Szukanie Ekipy) -> Pokaż guzik "Zatwierdź Ekipę"
             if (j.status === STATUS_MAP.APPROVED.id) {
                 const btn = document.createElement('button');
                 btn.id = 'btn-confirm-crew';
-                btn.type = 'button'; // Ważne: prevent submit
+                btn.type = 'button'; 
                 btn.className = 'btn btn-approve'; 
                 btn.style.marginTop = '20px';
                 btn.innerText = 'Zatwierdź Ekipę (Do Realizacji)';
@@ -413,7 +316,6 @@ const App = {
         const canManageProd = Permissions.canManageBudget(role);
         SafeDOM.setVisible('group-episode', canManageProd);
         SafeDOM.setVisible('group-job-cost', canManageProd);
-        
         document.querySelectorAll('.prod-only').forEach(el => SafeDOM.setVisible(el.id, canManageProd));
         document.querySelectorAll('#wrap-hotel .prod-only, #wrap-transport .prod-only').forEach(el => {
             if(canManageProd) el.classList.remove('hidden'); else el.classList.add('hidden');
@@ -493,6 +395,7 @@ const App = {
         };
     },
 
+    // --- FIX: Dodajemy brakujące metody ---
     deleteJob: async (id) => {
         if(!confirm('Czy na pewno chcesz usunąć to zlecenie?')) return;
         UI.toggleLoader(true);
@@ -571,13 +474,248 @@ const App = {
         } catch (e) { /* Ignore parsing errors */ }
     },
     
+    // ============================================================
+    // === NOWY MODUŁ FINANSOWY (Produkcja + Globalne) ===
+    // ============================================================
+
+    switchFinanceTab: (mode) => {
+        State.financeViewMode = mode; // 'production' lub 'global'
+        
+        // Przełączanie klasy .active na przyciskach
+        SafeDOM.get('tab-prod')?.classList.toggle('active', mode === 'production');
+        SafeDOM.get('tab-global')?.classList.toggle('active', mode === 'global');
+        
+        // Pokazywanie/ukrywanie kontenerów
+        SafeDOM.setVisible('finance-production-view', mode === 'production');
+        SafeDOM.setVisible('finance-global-view', mode === 'global');
+        
+        App.renderFinances();
+    },
+
+    handleAddBudgetAction: () => {
+        if (State.financeViewMode === 'global') {
+            const name = prompt("Nazwa nowego budżetu (np. Marketing, Biuro, Sprzęt):");
+            if (name) App.createGlobalBudget(name);
+        } else {
+            App.openEditCost(); // W trybie produkcji po staremu - dodajemy koszt
+        }
+    },
+
+    createGlobalBudget: async (name) => {
+        const budgetStr = prompt(`Jaki jest limit budżetu dla "${name}"? (Wpisz liczbę PLN)`);
+        const budget = Utils.safeNumber(budgetStr);
+        
+        if (name && budget > 0) {
+            UI.toggleLoader(true);
+            try {
+                await DataService.saveDoc(COLLECTIONS.GLOBAL_BUDGETS, {
+                    name: name,
+                    totalLimit: budget,
+                    createdAt: new Date().toISOString(),
+                    author: State.user.email
+                });
+                UI.toast('Utworzono nowy budżet');
+            } catch(e) { Logger.error("Błąd tworzenia budżetu", e); }
+            finally { UI.toggleLoader(false); }
+        }
+    },
+
+    renderFinances: () => {
+        const isGlobal = State.financeViewMode === 'global';
+        const s = State.getActiveSeason();
+        
+        // --- 1. LISTA OSTATNICH WYDATKÓW (Wspólna) ---
+        const listContainer = SafeDOM.get('finance-list');
+        if (listContainer) {
+            listContainer.innerHTML = '';
+            const frag = document.createDocumentFragment();
+            
+            let relevantCosts = [];
+            
+            if (isGlobal) {
+                // Pokaż tylko koszty przypisane do budżetów globalnych
+                relevantCosts = State.data.extraCosts.filter(c => c.globalBudgetId);
+            } else {
+                // Pokaż koszty produkcji (sezonu) NIE mające globalBudgetId
+                relevantCosts = State.data.extraCosts.filter(c => !c.globalBudgetId && c.seasonId === s?.id);
+            }
+
+            // Renderuj ostatnie 20
+            relevantCosts.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 20).forEach(ex => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;';
+                row.onclick = () => App.openEditCost(ex.id);
+                
+                const icon = isGlobal ? 'public' : 'movie';
+                // Jeśli globalny: pokaż nazwę budżetu. Jeśli produkcja: pokaż odcinek.
+                let subTitle = 'Ogólny';
+                if (isGlobal) {
+                    const b = State.data.globalBudgets.find(bg => bg.id === ex.globalBudgetId);
+                    subTitle = b ? b.name : 'Nieznany budżet';
+                } else if (ex.episodeId) {
+                    subTitle = `Odcinek ${ex.episodeId}`;
+                }
+
+                row.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="background:rgba(255,255,255,0.1); width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                            <span class="material-symbols-outlined" style="font-size:18px; color:var(--text-secondary)">${icon}</span>
+                        </div>
+                        <div>
+                            <div style="font-weight:600; font-size:13px;">${Utils.escape(ex.title)} <span style="font-size:10px; color:var(--brand-color)">✎</span></div>
+                            <div style="font-size:11px; color:var(--text-secondary)">${subTitle}</div>
+                        </div>
+                    </div>
+                    <div style="font-weight:700; color:var(--ios-green); font-size:13px;">${ex.amount} PLN</div>`;
+                frag.appendChild(row);
+            });
+            listContainer.appendChild(frag);
+        }
+
+        // --- 2. WIDOK GŁÓWNY (Logika rozdzielona) ---
+        
+        if (!isGlobal) {
+            // >>> WIDOK PRODUKCJI (Stara logika) <<<
+            if(!s) return;
+            SafeDOM.text('finance-season-name', s.name);
+
+            let totalSpent = 0;
+            const epCosts = {};
+            const budget = Utils.safeNumber(s.budget);
+
+            // Zliczamy koszty ze zleceń (Jobs)
+            State.getFilteredJobs().forEach(j => {
+                let cost = 0;
+                if (j.manualCost && parseFloat(j.manualCost) > 0) {
+                    cost = Utils.safeNumber(j.manualCost);
+                } else {
+                    const crewCost = (j.crew || []).reduce((acc, c) => acc + Utils.safeNumber(c.cost), 0);
+                    const logisticsCost = Utils.safeNumber(j.logistics?.hotel?.cost) + Utils.safeNumber(j.logistics?.transport?.cost);
+                    cost = crewCost + logisticsCost;
+                }
+                if (cost > 0) {
+                    totalSpent += cost;
+                    if(j.episodeId) epCosts[j.episodeId] = (epCosts[j.episodeId] || 0) + cost;
+                }
+            });
+
+            // Zliczamy koszty dodatkowe (tylko te produkcyjne!)
+            State.data.extraCosts.filter(c => !c.globalBudgetId && c.seasonId === s.id).forEach(c => {
+                const amt = Utils.safeNumber(c.amount);
+                totalSpent += amt;
+                if(c.episodeId) epCosts[c.episodeId] = (epCosts[c.episodeId] || 0) + amt;
+            });
+
+            SafeDOM.text('season-spent', `${totalSpent} PLN`);
+            SafeDOM.text('season-total', `${budget} PLN`);
+            SafeDOM.text('season-remaining', `${budget - totalSpent} PLN`);
+            SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent/budget)*100, 100) : 0}%`);
+
+            // Grid odcinków
+            const grid = SafeDOM.get('episodes-grid');
+            if(grid) {
+                grid.innerHTML = '';
+                const avg = budget / (s.episodes || 1);
+                const frag = document.createDocumentFragment();
+                for(let i=1; i<=(s.episodes||12); i++) {
+                    const c = epCosts[i] || 0;
+                    const d = document.createElement('div');
+                    d.className = 'episode-cell';
+                    if (c > avg) d.style.borderColor = 'var(--ios-red)';
+                    else if (c > 0) d.style.borderColor = 'var(--ios-green)';
+                    d.innerHTML = `<div style="font-weight:700; color:white;">ODC ${i}</div><div style="color:#ccc">${c}</div>`;
+                    frag.appendChild(d);
+                }
+                grid.appendChild(frag);
+            }
+
+        } else {
+            // >>> WIDOK GLOBALNY (Dla Magdy) <<<
+            const container = SafeDOM.get('global-budgets-list');
+            if (container) {
+                container.innerHTML = '';
+                
+                if (State.data.globalBudgets.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; color:#666; padding:40px;">Brak budżetów.<br>Kliknij <b>+ Dodaj</b> u góry.</div>';
+                } else {
+                    State.data.globalBudgets.forEach(gb => {
+                        // Policz wydatki dla tego konkretnego budżetu
+                        const spent = State.data.extraCosts
+                            .filter(c => c.globalBudgetId === gb.id)
+                            .reduce((sum, c) => sum + Utils.safeNumber(c.amount), 0);
+                        
+                        const percent = Math.min((spent / gb.totalLimit) * 100, 100);
+                        
+                        const card = document.createElement('div');
+                        card.className = 'global-budget-card';
+                        card.innerHTML = `
+                            <div class="gb-header">
+                                <span class="gb-title">${Utils.escape(gb.name)}</span>
+                                <span class="gb-amounts" style="color: ${spent > gb.totalLimit ? 'var(--ios-red)' : '#888'}">
+                                    ${spent} / ${gb.totalLimit} PLN
+                                </span>
+                            </div>
+                            <div class="gb-progress-bg">
+                                <div class="gb-progress-fill" style="width: ${percent}%; background-color: ${spent > gb.totalLimit ? 'var(--ios-red)' : 'var(--brand-color)'}"></div>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            }
+        }
+    },
+
+    // --- NOWA OBSŁUGA FORMULARZA KOSZTÓW ---
+
+    setCostType: (type) => {
+        SafeDOM.val('cost-type', type); // Ustaw hidden input
+        
+        // Style przycisków
+        document.querySelectorAll('.role-opt').forEach(el => el.classList.remove('active'));
+        SafeDOM.get('type-opt-' + type)?.classList.add('active');
+        
+        // Widoczność sekcji
+        SafeDOM.setVisible('group-cost-episode', type === 'episode');
+        SafeDOM.setVisible('group-cost-global', type === 'global');
+    },
+
     openEditCost: (id) => {
         const cost = State.data.extraCosts.find(c => c.id === id);
+        
         SafeDOM.val('cost-id', cost ? cost.id : '');
         SafeDOM.val('cost-title', cost ? cost.title : '');
         SafeDOM.val('cost-amount', cost ? cost.amount : '');
-        SafeDOM.val('cost-episode-input', cost?.episodeId || '');
-        SafeDOM.text('cost-episode-display', cost?.episodeId ? `Odcinek ${cost.episodeId}` : 'Nie wybrano');
+        
+        // 1. Wypełnij listę rozwijaną budżetów globalnych
+        const select = SafeDOM.get('cost-global-select');
+        select.innerHTML = '<option value="">-- Wybierz Budżet --</option>';
+        (State.data.globalBudgets || []).forEach(gb => {
+            const opt = document.createElement('option');
+            opt.value = gb.id;
+            opt.innerText = gb.name;
+            select.appendChild(opt);
+        });
+
+        // 2. Wykryj jaki to typ kosztu (Odcinek czy Globalny?)
+        let type = 'episode';
+        if (cost && cost.globalBudgetId) {
+            type = 'global';
+        } else if (!cost && State.financeViewMode === 'global') {
+            type = 'global'; // Domyślnie globalny, jeśli jesteśmy w zakładce globalnej
+        }
+        
+        // 3. Ustaw interfejs pod ten typ
+        App.setCostType(type);
+
+        // 4. Wypełnij pola specyficzne
+        if (type === 'episode') {
+            SafeDOM.val('cost-episode-input', cost?.episodeId || '');
+            SafeDOM.text('cost-episode-display', cost?.episodeId ? `Odcinek ${cost.episodeId}` : 'Nie wybrano');
+        } else {
+            if(cost) select.value = cost.globalBudgetId;
+        }
+
         SafeDOM.text('cost-modal-title', cost ? 'Edytuj Koszt' : 'Dodaj Koszt');
         SafeDOM.setVisible('btn-delete-cost', !!cost);
         UI.openModal('modal-cost');
@@ -585,17 +723,32 @@ const App = {
 
     saveExtraCost: async () => {
         const id = SafeDOM.val('cost-id');
+        const type = SafeDOM.val('cost-type'); // 'episode' lub 'global'
+        
         try {
             const data = {
                 title: SafeDOM.val('cost-title'),
                 amount: Utils.safeNumber(SafeDOM.val('cost-amount')),
-                episodeId: Utils.safeNumber(SafeDOM.val('cost-episode-input')),
-                seasonId: State.activeSeasonId
+                seasonId: State.activeSeasonId, // Zawsze przypisujemy do aktywnego sezonu (dla porządku w bazie)
+                createdAt: new Date().toISOString()
             };
-            if(!data.title || !data.amount) return UI.toast('Uzupełnij dane', 'error');
+
+            // Logika rozwidlenia
+            if (type === 'episode') {
+                data.episodeId = Utils.safeNumber(SafeDOM.val('cost-episode-input'));
+                data.globalBudgetId = null; // Czyścimy na wszelki wypadek
+            } else {
+                data.episodeId = null;
+                data.globalBudgetId = SafeDOM.val('cost-global-select');
+            }
+
+            // Walidacja
+            if(!data.title || !data.amount) return UI.toast('Uzupełnij nazwę i kwotę', 'error');
+            if(type === 'global' && !data.globalBudgetId) return UI.toast('Wybierz budżet globalny z listy', 'error');
+
             await DataService.saveDoc(COLLECTIONS.COSTS, data, id || null);
             UI.closeModal('modal-cost');
-            UI.toast('Zapisano');
+            UI.toast('Zapisano koszt');
         } catch(e) { Logger.error("Save Cost", e); }
     },
 

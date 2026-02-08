@@ -5,7 +5,9 @@ export const State = {
     user: null,
     activeSeasonId: null,
     impersonatedRole: null,
-    data: { jobs: [], seasons: [], extraCosts: [], users: [] },
+    data: { jobs: [], seasons: [], extraCosts: [], users: [], globalBudgets: [] },
+
+    financeViewMode: 'production', // 'production' lub 'global'
     
     getCurrentRole: () => State.impersonatedRole || (State.user ? State.user.role : ROLES.REPORTER),
     

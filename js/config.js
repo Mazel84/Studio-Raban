@@ -19,6 +19,7 @@ export const COLLECTIONS = {
     JOBS: 'jobs',
     COSTS: 'extraCosts',
     SEASONS: 'seasons'
+    GLOBAL_BUDGETS: 'globalBudgets' // NOWE: Kolekcja dla Magdy
 };
 
 export const CONFIG = {

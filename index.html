@@ -84,21 +84,40 @@
         </div>
         <form onsubmit="event.preventDefault();">
             <input type="hidden" id="cost-id">
+            
+            <div class="input-group" style="margin-bottom: 15px;">
+                <label style="color:var(--brand-color);">Przypisz koszt do:</label>
+                <div class="role-switch" style="margin-top:5px;">
+                    <div id="type-opt-episode" class="role-opt active" onclick="window.App.setCostType('episode')">Odcinek</div>
+                    <div id="type-opt-global" class="role-opt" onclick="window.App.setCostType('global')">Budżet Globalny</div>
+                </div>
+                <input type="hidden" id="cost-type" value="episode">
+            </div>
+
             <div class="input-group">
                 <label>Nazwa Kosztu</label>
-                <input class="input-field" id="cost-title" placeholder="np. Dodatkowy Montaż" required type="text">
+                <input class="input-field" id="cost-title" placeholder="np. Catering, Sprzęt" required type="text">
             </div>
             <div class="input-group">
                 <label>Kwota (PLN)</label>
                 <input class="input-field" id="cost-amount" placeholder="0" required type="number">
             </div>
-            <div class="input-group">
-                <label>Przypisz do Odcinka (Opcjonalnie)</label>
+
+            <div class="input-group" id="group-cost-episode">
+                <label>Przypisz do Odcinka</label>
                 <div class="input-field input-clickable" id="cost-episode-display" onclick="window.Selector.openEpisodes('cost-episode-input', 'cost-episode-display')">
                     Nie wybrano
                 </div>
                 <input type="hidden" id="cost-episode-input">
             </div>
+
+            <div class="input-group hidden" id="group-cost-global">
+                <label>Wybierz Budżet</label>
+                <select id="cost-global-select" class="input-field" style="background:rgba(255,255,255,0.1); color:white;">
+                    <option value="">-- Wybierz Budżet --</option>
+                </select>
+            </div>
+
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button type="button" id="btn-delete-cost" class="btn btn-reject hidden" style="width: auto;" onclick="window.App.deleteCost()">Usuń</button>
                 <button type="button" onclick="window.App.saveExtraCost()" class="btn btn-primary" style="flex:1;">Zapisz</button>
@@ -331,23 +350,38 @@
         <div class="view-header">
             <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
             <h2 class="header-title">Budżet</h2>
-            <button class="btn btn-sm btn-secondary" onclick="window.App.openEditCost()">+ Koszt</button>
+            <button class="btn btn-sm btn-secondary" onclick="window.App.handleAddBudgetAction()">+ Dodaj</button>
         </div>
-        <div class="card">
-            <h3>Sezon: <span id="finance-season-name" style="color:var(--brand-color)"></span></h3>
-            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
-                <span id="season-spent" style="font-size:24px; font-weight:700;">0 PLN</span>
-                <span style="color:var(--text-secondary); font-size:12px;">z puli <span id="season-total">0</span></span>
-            </div>
-            <div class="progress-container">
-                <div class="progress-bar" id="season-progress" style="width: 0%"></div>
-            </div>
-            <div style="margin-top:8px; font-size:12px; color:var(--text-secondary); text-align:right;">
-                Pozostało: <span id="season-remaining" style="color:white; font-weight:600;">0 PLN</span>
+
+        <div class="segmented-control-container" style="margin-bottom: 20px;">
+            <div class="segmented-control">
+                <button id="tab-prod" class="seg-btn active" onclick="window.App.switchFinanceTab('production')">Produkcja TV</button>
+                <button id="tab-global" class="seg-btn" onclick="window.App.switchFinanceTab('global')">Budżety Globalne</button>
             </div>
         </div>
-        <h3 style="margin-left: 4px; color:var(--text-secondary);">STATUS ODCINKÓW</h3>
-        <div class="episode-grid" id="episodes-grid"></div>
+
+        <div id="finance-production-view">
+            <div class="card">
+                <h3>Sezon: <span id="finance-season-name" style="color:var(--brand-color)"></span></h3>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
+                    <span id="season-spent" style="font-size:24px; font-weight:700;">0 PLN</span>
+                    <span style="color:var(--text-secondary); font-size:12px;">z puli <span id="season-total">0</span></span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar" id="season-progress" style="width: 0%"></div>
+                </div>
+                <div style="margin-top:8px; font-size:12px; color:var(--text-secondary); text-align:right;">
+                    Pozostało: <span id="season-remaining" style="color:white; font-weight:600;">0 PLN</span>
+                </div>
+            </div>
+            <h3 style="margin-left: 4px; color:var(--text-secondary); margin-top:20px;">STATUS ODCINKÓW</h3>
+            <div class="episode-grid" id="episodes-grid"></div>
+        </div>
+
+        <div id="finance-global-view" class="hidden">
+            <div id="global-budgets-list"></div>
+        </div>
+
         <div class="card" style="margin-top: 30px;">
             <h3>Ostatnie Wydatki</h3>
             <div id="finance-list" style="font-size:13px;"></div>
