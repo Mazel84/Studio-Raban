@@ -21,6 +21,8 @@ export const COLLECTIONS = {
     SEASONS: 'seasons',
     GLOBAL_BUDGETS: 'globalBudgets' // NOWE: Kolekcja dla Magdy
 
+};
+
     // NOWE: Sztywna numeracja odcinków
 export const SEASON_STARTS = {
     "Zima 2026": 422,

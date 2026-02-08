@@ -1,7 +1,7 @@
 // js/helpers.js
-import { SafeDOM, Utils } from './utils.js';
+import { SafeDOM, Utils } from './utils.js'; // ZMIANA: Dodany import Utils
 import { UI } from './ui.js';
-import { State } from './state.js'; // Potrzebne dla Selectora (ilość odcinków)
+import { State } from './state.js';
 
 export const Router = {
     history: [],
@@ -16,7 +16,6 @@ export const Router = {
         SafeDOM.get('nav-' + viewId)?.classList.add('active');
         
         if (viewId === 'dashboard') Router.history = [];
-        // Router zakłada, że window.App jest dostępne globalnie (bo App.js ładuje się na końcu)
         if (window.App) window.App.renderAll();
     },
     back: () => Router.go(Router.history.length > 0 ? Router.history.pop() : 'dashboard', true)
@@ -53,22 +52,23 @@ export const Selector = {
         SafeDOM.text('selector-title', "Wybierz Odcinek");
         
         const season = State.getActiveSeason();
-        const count = (season || {}).episodes || 12;
+        const count = (season && season.episodes) ? season.episodes : 12;
         
-        // ZMIANA: Pobieramy numer startowy
+        // ZMIANA: Pobieramy numer startowy z Utils (np. 422)
+        // Jeśli nie ma sezonu, zaczynamy od 1
         const startNum = season ? Utils.getSeasonStart(season.name) : 1;
 
         const frag = document.createDocumentFragment();
         
-        // ZMIANA: Pętla idzie od startNum do (startNum + count)
+        // ZMIANA: Pętla generująca numery ciągłe
         for(let i = 0; i < count; i++) {
-            const currentNum = startNum + i; // np. 422 + 0 = 422
+            const currentNum = startNum + i;
             
             const item = document.createElement('div');
             item.className = 'selector-item';
-            item.innerText = `Odcinek ${currentNum}`; // Wyświetla "Odcinek 422"
+            item.innerText = `Odcinek ${currentNum}`;
             item.onclick = () => {
-                SafeDOM.val(inputId, currentNum); // Zapisuje 422 do bazy
+                SafeDOM.val(inputId, currentNum);
                 const displayEl = SafeDOM.get(displayId);
                 if(displayEl) displayEl.innerText = `Odcinek ${currentNum}`;
                 UI.closeModal('modal-selector');
@@ -78,8 +78,7 @@ export const Selector = {
         list.appendChild(frag);
         UI.openModal('modal-selector');
     },
-    // ... (openRoles bez zmian) ...
-};
+
     openRoles: (displayId, valId) => {
         const list = SafeDOM.get('selector-list');
         list.innerHTML = '';
