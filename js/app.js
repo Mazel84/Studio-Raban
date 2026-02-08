@@ -136,7 +136,16 @@ const App = {
     },
 
     renderDashboard: () => {
-        const jobs = State.getFilteredJobs();
+        // 1. Pobierz wszystkie zlecenia (posortowane datami)
+        let jobs = State.getFilteredJobs();
+        const role = State.getCurrentRole();
+
+        // ZMIANA: JEŚLI REPORTER -> FILTRUJ TYLKO JEGO ZLECENIA
+        if (role === ROLES.REPORTER) {
+            jobs = jobs.filter(j => j.author === State.user.email);
+        }
+
+        // 2. Policz statystyki (tylko z przefiltrowanych)
         const count = jobs.filter(j => j.status === STATUS_MAP.PENDING.id).length;
         
         let suffix = 'Nowych Zleceń';
@@ -145,15 +154,21 @@ const App = {
 
         SafeDOM.text('dash-pending-text', `${count} ${suffix}`);
         
-        const isRep = State.getCurrentRole() === ROLES.REPORTER;
-        const displayJobs = (isRep ? jobs.filter(j => j.author === State.user.email) : jobs).slice(0, 5);
+        // 3. Wyświetl 5 ostatnich (Twoich) zleceń
+        const displayJobs = jobs.slice(0, 5);
         
+        const isRep = role === ROLES.REPORTER;
         const container = SafeDOM.get(isRep ? 'my-jobs-container' : 'recent-jobs-container');
         if (container) {
             container.innerHTML = '';
             const frag = document.createDocumentFragment();
-            displayJobs.forEach(j => frag.appendChild(UI.renderJobCard(j)));
-            container.appendChild(frag);
+            
+            if (displayJobs.length === 0) {
+                 container.innerHTML = '<div style="padding:15px; color:#666; text-align:center; font-size:13px;">Brak ostatnich zleceń</div>';
+            } else {
+                displayJobs.forEach(j => frag.appendChild(UI.renderJobCard(j)));
+                container.appendChild(frag);
+            }
         }
     },
 
@@ -162,14 +177,42 @@ const App = {
         if (!container) return;
         container.innerHTML = '';
 
-        const term = SafeDOM.val('search-jobs').toLowerCase();
+        // 1. Pobierz dane
         let jobs = State.getFilteredJobs();
+        const role = State.getCurrentRole();
+
+        // ZMIANA: JEŚLI REPORTER -> WIDZI TYLKO SWOJE (Bezpieczeństwo)
+        if (role === ROLES.REPORTER) {
+            jobs = jobs.filter(j => j.author === State.user.email);
+        }
+
+        // 2. Filtrowanie po wyszukiwarce
+        const term = SafeDOM.val('search-jobs').toLowerCase();
         if (term) jobs = jobs.filter(j => j.title.toLowerCase().includes(term));
 
         if (jobs.length === 0) {
             container.innerHTML = '<div style="text-align:center; padding:20px; color:gray;">Brak wyników</div>';
             return;
         }
+
+        // 3. Grupowanie po miesiącach
+        const groups = {};
+        jobs.forEach(j => {
+            const key = j.date.substring(0, 7) || '0000-00';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(j);
+        });
+
+        const frag = document.createDocumentFragment();
+        Object.keys(groups).sort().reverse().forEach(key => {
+            const header = document.createElement('div');
+            header.className = 'month-header';
+            header.innerText = Utils.getMonthYear(groups[key][0].date);
+            frag.appendChild(header);
+            groups[key].forEach(j => frag.appendChild(UI.renderJobCard(j)));
+        });
+        container.appendChild(frag);
+    },
 
         const groups = {};
         jobs.forEach(j => {
