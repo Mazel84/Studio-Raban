@@ -79,6 +79,8 @@ const App = {
     },
 
     init: () => {
+        if (navigator.clearAppBadge) navigator.clearAppBadge();
+        
         setRenderCallback(() => App.renderAll());
 
         const start = () => {

@@ -24,4 +24,9 @@ messaging.onBackgroundMessage((payload) => {
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
+  // 2. NOWOŚĆ: Ustaw Badge (czerwoną cyferkę) na ikonie
+  if (navigator.setAppBadge) {
+      // Ustawiamy "1" aby zasygnalizować, że coś jest nowego
+      navigator.setAppBadge(1).catch((e) => console.error(e));
+  }
 });
