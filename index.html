@@ -147,7 +147,15 @@
                 <input class="input-field" id="login-pass" placeholder="Twoje Hasło" type="password"/>
             </div>
         </div>
-        <div class="hidden" id="register-fields">
+       
+        <div class="input-group" style="flex-direction:row; align-items:center; gap:10px; margin: 15px 0;">
+    <input type="checkbox" id="reg-terms" style="width:20px; height:20px; accent-color:var(--brand-color);">
+    <label for="reg-terms" style="font-size:13px; color:#ccc; margin:0;">
+        Akceptuję <a href="#" onclick="window.UI.openModal('modal-terms'); return false;" style="color:var(--brand-color); text-decoration:underline;">Regulamin (BETA)</a>
+    </label>
+</div>
+       
+<div class="hidden" id="register-fields">
             <div class="input-group">
                 <label>Email</label>
                 <input class="input-field" id="reg-email" placeholder="Twój E-mail" type="email"/>
@@ -436,6 +444,49 @@
 
 
 <script type="module" src="js/app.js"></script>
+
+<div id="modal-terms" class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px; max-height: 80vh; display:flex; flex-direction:column;">
+        <h3 style="margin-top:0;">Regulamin Narzędzia (BETA)</h3>
+        
+        <div style="overflow-y: auto; padding-right: 10px; text-align: left; font-size: 13px; line-height: 1.5; color: #ddd; flex:1;">
+            
+            <h4 style="color:white; margin:15px 0 5px;">§ 1. Postanowienia ogólne i charakter narzędzia</h4>
+            <p>1. Niniejsze narzędzie (zwane dalej „Aplikacją”) jest autorskim, prywatnym projektem stworzonym w celach testowych i pomocniczych, mającym na celu wyłącznie ułatwienie bieżącej organizacji pracy zespołu produkcyjnego.</p>
+            <p>2. <b>Aplikacja nie jest oficjalnym oprogramowaniem</b> dostarczonym, autoryzowanym ani serwisowanym przez Zleceniodawcę/Pracodawcę (Telewizja Polska S.A.).</p>
+            <p>3. Twórcą i administratorem technicznym Aplikacji jest Marcin Mazelewski (dalej: „Twórca”).</p>
+            <p>4. Dostęp do Aplikacji jest dobrowolny, bezpłatny i udzielany wyłącznie wskazanym przez Twórcę współpracownikom (dalej: „Użytkownicy”).</p>
+
+            <h4 style="color:white; margin:15px 0 5px;">§ 2. Zakres odpowiedzialności (Kluczowe)</h4>
+            <p>1. <b>Brak gwarancji:</b> Aplikacja jest udostępniana w fazie testowej („as is”). Twórca nie udziela żadnych gwarancji co do jej bezbłędnego działania, dostępności (uptime) oraz poprawności generowanych danych.</p>
+            <p>2. <b>Weryfikacja danych:</b> Aplikacja pełni funkcję wyłącznie pomocniczą. Użytkownik zobowiązany jest do samodzielnej weryfikacji wszystkich danych (w szczególności finansowych, harmonogramów i danych kontaktowych) przed ich oficjalnym wykorzystaniem w dokumentach produkcyjnych.</p>
+            <p>3. <b>Wyłączenie odpowiedzialności:</b> Twórca nie ponosi odpowiedzialności za:
+                <ul style="padding-left: 20px; margin: 5px 0;">
+                    <li>Szkody wynikłe z błędnego działania Aplikacji (np. błędy w obliczeniach budżetowych).</li>
+                    <li>Utratę danych wprowadzonych do Aplikacji.</li>
+                    <li>Decyzje podjęte przez Użytkowników na podstawie sugestii wygenerowanych przez AI w Aplikacji.</li>
+                    <li>Problemy techniczne wynikające z działania dostawców zewnętrznych.</li>
+                </ul>
+            </p>
+
+            <h4 style="color:white; margin:15px 0 5px;">§ 3. Bezpieczeństwo danych i poufność</h4>
+            <p>1. <b>Zakaz udostępniania:</b> Użytkownik zobowiązuje się do nieudostępniania dostępu do Aplikacji (loginów, haseł, linków) osobom trzecim spoza ścisłego zespołu produkcyjnego.</p>
+            <p>2. <b>Własność danych:</b> Użytkownik przyjmuje do wiadomości, że dane wprowadzane do Aplikacji (w szczególności dane osobowe i finansowe) stanowią tajemnicę przedsiębiorstwa głównego Zleceniodawcę/Pracodawcy.</p>
+            <p>3. <b>Zakaz kopiowania:</b> Zabrania się kopiowania, eksportowania lub wykorzystywania danych z Aplikacji do celów prywatnych lub innych niż związane z realizacją produkcji.</p>
+            <p>4. <b>RODO:</b> Użytkownik zobowiązuje się nie wprowadzać do Aplikacji nadmiarowych danych wrażliwych.</p>
+
+            <h4 style="color:white; margin:15px 0 5px;">§ 4. Zakończenie korzystania</h4>
+            <p>Twórca zastrzega sobie prawo do wyłączenia Aplikacji w dowolnym momencie bez podania przyczyny i bez wcześniejszego uprzedzenia.</p>
+
+            <h4 style="color:white; margin:15px 0 5px;">§ 5. Oświadczenie Użytkownika</h4>
+            <p>Rozpoczęcie korzystania z Aplikacji jest równoznaczne z akceptacją niniejszego Regulaminu oraz oświadczeniem, że Użytkownik jest świadomy eksperymentalnego charakteru narzędzia i korzysta z niego na własną odpowiedzialność.</p>
+        </div>
+
+        <div style="margin-top:20px; text-align:center;">
+            <button class="btn btn-primary" onclick="window.UI.closeModal('modal-terms')">Rozumiem, zamknij</button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

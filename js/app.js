@@ -30,21 +30,33 @@ const Auth = {
         document.querySelectorAll('.role-opt').forEach(d => d.classList.remove('active'));
         el.classList.add('active');
     },
-    process: async () => {
+  process: async () => {
         UI.toggleLoader(true);
         try {
             const email = SafeDOM.val(Auth.mode === 'login' ? 'login-email' : 'reg-email');
             const pass = SafeDOM.val(Auth.mode === 'login' ? 'login-pass' : 'reg-pass');
             
+            // --- WALIDACJA ---
+            if (!email || !pass) throw new Error("Wpisz e-mail i hasło");
+
             if (Auth.mode === 'login') {
                 await signInWithEmailAndPassword(auth, email, pass);
             } else {
+                // REJESTRACJA
                 if (pass.length < 6) throw new Error("Hasło min. 6 znaków");
+                
+                // NOWE: Sprawdzamy czy zaakceptowano regulamin
+                const termsAccepted = SafeDOM.isChecked('reg-terms');
+                if (!termsAccepted) throw new Error("Musisz zaakceptować Regulamin (BETA), aby korzystać z narzędzia.");
+
                 await createUserWithEmailAndPassword(auth, email, pass);
+                
                 await DataService.saveDoc(COLLECTIONS.USERS, {
                     email: email,
                     name: SafeDOM.val('reg-name'),
-                    role: email.startsWith('admin') ? ROLES.ADMIN : Auth.selectedRole
+                    role: email.startsWith('admin') ? ROLES.ADMIN : Auth.selectedRole,
+                    termsAccepted: true, // Zapisujemy fakt akceptacji w bazie (Dla Twojego bezpieczeństwa)
+                    termsAcceptedAt: new Date().toISOString() // I datę akceptacji
                 });
             }
         } catch (e) { Logger.error("Auth", e); } finally { UI.toggleLoader(false); }
