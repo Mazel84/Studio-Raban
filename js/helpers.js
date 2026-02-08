@@ -51,16 +51,26 @@ export const Selector = {
         const list = SafeDOM.get('selector-list');
         list.innerHTML = '';
         SafeDOM.text('selector-title', "Wybierz Odcinek");
-        const count = (State.getActiveSeason() || {}).episodes || 12;
+        
+        const season = State.getActiveSeason();
+        const count = (season || {}).episodes || 12;
+        
+        // ZMIANA: Pobieramy numer startowy
+        const startNum = season ? Utils.getSeasonStart(season.name) : 1;
+
         const frag = document.createDocumentFragment();
-        for(let i=1; i<=count; i++) {
+        
+        // ZMIANA: Pętla idzie od startNum do (startNum + count)
+        for(let i = 0; i < count; i++) {
+            const currentNum = startNum + i; // np. 422 + 0 = 422
+            
             const item = document.createElement('div');
             item.className = 'selector-item';
-            item.innerText = `Odcinek ${i}`;
+            item.innerText = `Odcinek ${currentNum}`; // Wyświetla "Odcinek 422"
             item.onclick = () => {
-                SafeDOM.val(inputId, i);
+                SafeDOM.val(inputId, currentNum); // Zapisuje 422 do bazy
                 const displayEl = SafeDOM.get(displayId);
-                if(displayEl) displayEl.innerText = `Odcinek ${i}`;
+                if(displayEl) displayEl.innerText = `Odcinek ${currentNum}`;
                 UI.closeModal('modal-selector');
             };
             frag.appendChild(item);
@@ -68,6 +78,8 @@ export const Selector = {
         list.appendChild(frag);
         UI.openModal('modal-selector');
     },
+    // ... (openRoles bez zmian) ...
+};
     openRoles: (displayId, valId) => {
         const list = SafeDOM.get('selector-list');
         list.innerHTML = '';

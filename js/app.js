@@ -80,7 +80,7 @@ const App = {
 
     init: () => {
         if (navigator.clearAppBadge) navigator.clearAppBadge();
-        
+
         setRenderCallback(() => App.renderAll());
 
         const start = () => {
@@ -618,14 +618,25 @@ const App = {
             if(grid) {
                 grid.innerHTML = '';
                 const avg = budget / (s.episodes || 1);
+                
+                // ZMIANA: Pobieramy start
+                const startNum = Utils.getSeasonStart(s.name);
+                const count = s.episodes || 12;
+
                 const frag = document.createDocumentFragment();
-                for(let i=1; i<=(s.episodes||12); i++) {
-                    const c = epCosts[i] || 0;
+                
+                // ZMIANA: Pętla po numerach absolutnych (np. 422, 423...)
+                for(let i = 0; i < count; i++) {
+                    const currentNum = startNum + i;
+                    const c = epCosts[currentNum] || 0; // Szukamy kosztów dla odcinka 422
+                    
                     const d = document.createElement('div');
                     d.className = 'episode-cell';
                     if (c > avg) d.style.borderColor = 'var(--ios-red)';
                     else if (c > 0) d.style.borderColor = 'var(--ios-green)';
-                    d.innerHTML = `<div style="font-weight:700; color:white;">ODC ${i}</div><div style="color:#ccc">${c}</div>`;
+                    
+                    // Wyświetlamy numer absolutny
+                    d.innerHTML = `<div style="font-weight:700; color:white;">ODC ${currentNum}</div><div style="color:#ccc">${c}</div>`;
                     frag.appendChild(d);
                 }
                 grid.appendChild(frag);

@@ -1,4 +1,5 @@
 // js/utils.js
+import { SEASON_STARTS } from './config.js'; // <--- Pamiętaj o imporcie na górze!
 
 export const Utils = {
     escape: (str) => {
@@ -19,6 +20,10 @@ export const Utils = {
     safeNumber: (val) => {
         const num = parseFloat(val);
         return isNaN(num) ? 0 : num;
+    },
+    getSeasonStart: (seasonName) => {
+        // Jeśli mamy wpis w configu, użyj go. Jeśli nie, zacznij od 1.
+        return SEASON_STARTS[seasonName] || 1;
     },
     debounce: (func, wait) => {
         let timeout;
