@@ -379,7 +379,8 @@ const App = {
                 episodeId: Utils.safeNumber(SafeDOM.val('job-episode')) || null,
                 manualCost: Utils.safeNumber(SafeDOM.val('job-manual-cost')) || null,
                 seasonId: State.activeSeasonId,
-                author: State.user.email,
+                // ZMIANA: Zachowujemy oryginalnego autora przy edycji
+                author: editId ? (State.data.jobs.find(j=>j.id==editId)||{}).author : State.user.email,
                 status: editId ? (State.data.jobs.find(j=>j.id==editId)||{}).status : STATUS_MAP.PENDING.id,
                 crew: crew,
                 logistics: App._getLogisticsData()
