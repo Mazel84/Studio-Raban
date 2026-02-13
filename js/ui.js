@@ -8,7 +8,7 @@ export const UI = {
     openModal: (id) => SafeDOM.get(id)?.classList.add('open'),
     closeModal: (id) => SafeDOM.get(id)?.classList.remove('open'),
     toggleLoader: (show) => SafeDOM.setVisible('loader', show),
-    
+
     toast: (msg, type = 'normal') => {
         const container = SafeDOM.get('toast-container');
         if (!container) return;
@@ -31,29 +31,36 @@ export const UI = {
         // Resolve Author Name
         const authorUser = State.data.users.find(u => u.email === job.author);
         const reporterName = authorUser ? authorUser.name : (job.author || 'Nieznany');
-        
+
         const div = document.createElement('div');
-        div.className = 'card';
-        
-        const costBadge = (Permissions.canManageBudget(role) && totalCost > 0) 
-            ? `<span style="font-size:11px; font-weight:700; color:var(--ios-green); background:rgba(48, 209, 88, 0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${totalCost} PLN</span>` 
+        div.className = 'job-card';
+
+        const costBadge = (Permissions.canManageBudget(role) && totalCost > 0)
+            ? `<span class="job-cost-badge">${totalCost} PLN</span>`
             : '';
 
-        const paxComment = job.paxComment ? `<div style="font-size:12px; color:var(--ios-indigo); margin-bottom:5px;">PAX: ${Utils.escape(job.paxComment)}</div>` : '';
-        
+        const paxComment = job.paxComment
+            ? `<div class="job-pax-comment"><span class="material-symbols-outlined" style="font-size:13px; vertical-align: -2px;">comment</span> PAX: ${Utils.escape(job.paxComment)}</div>`
+            : '';
+
+        const locationHtml = job.location
+            ? `<div class="job-location"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:-3px;">location_on</span> ${Utils.escape(job.location)}</div>`
+            : '';
+
         div.innerHTML = `
-            <div style="display:flex; justify-content:space-between;">
-                <div>
-                    <span class="status-badge ${status.css}">${status.label}</span> 
-                    <span style="font-size:11px; color:#888;">${Utils.escape(job.date)}</span>
-                    <span style="font-size:11px; color:var(--text-secondary); margin-left: 5px;">| ${Utils.escape(reporterName)}</span>
+            <div class="job-card-header">
+                <div class="job-card-meta">
+                    <span class="status-badge ${status.css}">${status.label}</span>
+                    <span class="job-date">${Utils.escape(job.date)}</span>
+                    <span class="job-separator">•</span>
+                    <span class="job-reporter">${Utils.escape(reporterName)}</span>
                     ${costBadge}
                 </div>
             </div>
-            <h3 style="margin:8px 0; color:white; font-size:16px; text-transform:none;">${Utils.escape(job.title)}</h3>
-            <div style="font-size:13px; color:#ccc; margin-bottom:8px;">${Utils.escape(job.location)}</div>
+            <div class="job-title">${Utils.escape(job.title)}</div>
+            ${locationHtml}
             ${paxComment}
-            <div style="margin-top:5px;">${UI._renderCrewList(job.crew)}</div>
+            ${UI._renderCrewList(job.crew)}
             ${UI._renderCardActions(job, isPax, isEditable)}
         `;
         return div;
@@ -61,30 +68,45 @@ export const UI = {
 
     _renderCrewList: (crew) => {
         if (!crew || !crew.length) return '';
-        return crew.map(c => {
+        const items = crew.map(c => {
             const nameEsc = Utils.escape(c.name);
             const roleEsc = Utils.escape(c.role);
-            if (c.phone) {
-                return `<div style="font-size:12px; color:#aaa; margin-top:4px; display:flex; align-items:center; gap:5px;">
-                    <span>• ${roleEsc}</span>
-                    <a href="tel:${Utils.escape(c.phone)}" style="color:white; font-weight:700; text-decoration:none; border-bottom:1px dotted var(--brand-color); display:flex; align-items:center; gap:4px;">
-                        ${nameEsc} <span class="material-symbols-outlined" style="font-size:14px; color:var(--brand-color)">call</span>
-                    </a>
-                </div>`;
-            }
-            return `<div style="font-size:12px; color:#aaa; margin-top:2px;">• ${roleEsc} <b>${nameEsc}</b></div>`;
-        }).join('');
+            if (!nameEsc && !roleEsc) return '';
+
+            const phoneLink = c.phone
+                ? `<a href="tel:${Utils.escape(c.phone)}" class="crew-phone-link">
+                    <span class="material-symbols-outlined" style="font-size:13px;">call</span>
+                   </a>`
+                : '';
+
+            return `<div class="crew-member-pill">
+                <span class="crew-role-pill">${roleEsc || 'Rola'}</span>
+                <span class="crew-name-text">${nameEsc || 'Brak'}</span>
+                ${phoneLink}
+            </div>`;
+        }).filter(s => s).join('');
+
+        return items ? `<div class="crew-list-container">${items}</div>` : '';
     },
 
     _renderCardActions: (job, isPax, isEditable) => {
         if (isPax && job.status === STATUS_MAP.PENDING.id) {
             return `
-                <div style="display:flex; gap:10px; margin-top:15px;">
-                    <button type="button" onclick="window.App.handlePaxDecision('${job.id}', false)" class="btn btn-sm btn-reject" style="flex:1;">Odrzuć</button>
-                    <button type="button" onclick="window.App.handlePaxDecision('${job.id}', true)" class="btn btn-sm btn-approve" style="flex:1;">Akceptuj</button>
+                <div class="job-actions">
+                    <button type="button" onclick="window.App.handlePaxDecision('${job.id}', false)" class="job-btn job-btn-reject">
+                        <span class="material-symbols-outlined" style="font-size:16px;">close</span> Odrzuć
+                    </button>
+                    <button type="button" onclick="window.App.handlePaxDecision('${job.id}', true)" class="job-btn job-btn-approve">
+                        <span class="material-symbols-outlined" style="font-size:16px;">check</span> Akceptuj
+                    </button>
                 </div>`;
         } else if (isEditable) {
-            return `<button type="button" onclick="window.App.openEditJob('${job.id}')" class="btn btn-sm btn-secondary" style="width:100%; margin-top:10px;">Edytuj</button>`;
+            return `
+                <div class="job-actions">
+                    <button type="button" onclick="window.App.openEditJob('${job.id}')" class="job-btn job-btn-edit">
+                        <span class="material-symbols-outlined" style="font-size:15px;">edit</span> Edytuj
+                    </button>
+                </div>`;
         }
         return '';
     }
