@@ -1,10 +1,10 @@
 // js/app.js
 import { ROLES, STATUS_MAP, COLLECTIONS, CONFIG } from './config.js';
 import { Utils, Logger, SafeDOM } from './utils.js';
-import { 
-    auth, messaging, 
-    getToken, onMessage, 
-    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged 
+import {
+    auth, messaging,
+    getToken, onMessage,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged
 } from './firebase-init.js';
 import { DataService, setRenderCallback } from './data-service.js';
 import { UI } from './ui.js';
@@ -30,12 +30,12 @@ const Auth = {
         document.querySelectorAll('.role-opt').forEach(d => d.classList.remove('active'));
         el.classList.add('active');
     },
-  process: async () => {
+    process: async () => {
         UI.toggleLoader(true);
         try {
             const email = SafeDOM.val(Auth.mode === 'login' ? 'login-email' : 'reg-email');
             const pass = SafeDOM.val(Auth.mode === 'login' ? 'login-pass' : 'reg-pass');
-            
+
             // --- WALIDACJA ---
             if (!email || !pass) throw new Error("Wpisz e-mail i hasło");
 
@@ -44,13 +44,13 @@ const Auth = {
             } else {
                 // REJESTRACJA
                 if (pass.length < 6) throw new Error("Hasło min. 6 znaków");
-                
+
                 // NOWE: Sprawdzamy czy zaakceptowano regulamin
                 const termsAccepted = SafeDOM.isChecked('reg-terms');
                 if (!termsAccepted) throw new Error("Musisz zaakceptować Regulamin (BETA), aby korzystać z narzędzia.");
 
                 await createUserWithEmailAndPassword(auth, email, pass);
-                
+
                 await DataService.saveDoc(COLLECTIONS.USERS, {
                     email: email,
                     name: SafeDOM.val('reg-name'),
@@ -61,9 +61,9 @@ const Auth = {
             }
         } catch (e) { Logger.error("Auth", e); } finally { UI.toggleLoader(false); }
     },
-    logout: async () => { 
-        await signOut(auth); 
-        location.reload(); 
+    logout: async () => {
+        await signOut(auth);
+        location.reload();
     }
 };
 
@@ -76,14 +76,14 @@ const App = {
                 Logger.info("Zgoda na powiadomienia: JEST");
                 const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 const token = await getToken(messaging, { vapidKey: CONFIG.VAPID_KEY, serviceWorkerRegistration: registration });
-                
+
                 if (token && State.user && State.user.id) {
                     await DataService.saveDoc(COLLECTIONS.USERS, { pushToken: token }, State.user.id);
                     Logger.info("Token zapisany.");
-                    
+
                     onMessage(messaging, (payload) => {
                         UI.toast(`🔔 ${payload.notification.title}: ${payload.notification.body}`);
-                        if(window.Router) App.renderAll();
+                        if (window.Router) App.renderAll();
                     });
                 }
             }
@@ -124,9 +124,9 @@ const App = {
 
         // Ponieważ Firebase ładujemy jako moduł, jest gotowy od razu
         start();
-        
+
         const searchInput = SafeDOM.get('search-jobs');
-        if(searchInput) searchInput.addEventListener('keyup', Utils.debounce(() => App.renderList(), 300));
+        if (searchInput) searchInput.addEventListener('keyup', Utils.debounce(() => App.renderList(), 300));
         if (window.lucide) window.lucide.createIcons();
     },
 
@@ -159,23 +159,23 @@ const App = {
         }
 
         const count = jobs.filter(j => j.status === STATUS_MAP.PENDING.id).length;
-        
+
         let suffix = 'Nowych Zleceń';
         if (count === 1) suffix = 'Nowe Zlecenie';
         else if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) suffix = 'Nowe Zlecenia';
 
         SafeDOM.text('dash-pending-text', `${count} ${suffix}`);
-        
+
         const isRep = role === ROLES.REPORTER;
         const displayJobs = jobs.slice(0, 5); // Już przefiltrowane
-        
+
         const container = SafeDOM.get(isRep ? 'my-jobs-container' : 'recent-jobs-container');
         if (container) {
             container.innerHTML = '';
             const frag = document.createDocumentFragment();
-            
+
             if (displayJobs.length === 0) {
-                 container.innerHTML = '<div style="padding:15px; color:#666; text-align:center; font-size:13px;">Brak ostatnich zleceń</div>';
+                container.innerHTML = '<div style="padding:15px; color:#666; text-align:center; font-size:13px;">Brak ostatnich zleceń</div>';
             } else {
                 displayJobs.forEach(j => frag.appendChild(UI.renderJobCard(j)));
                 container.appendChild(frag);
@@ -191,6 +191,9 @@ const App = {
 
         let jobs = State.getFilteredJobs();
         const role = State.getCurrentRole();
+
+        // BUG-6 FIX: Pokaż przycisk "+ Dodaj" dla ról, które mogą tworzyć zlecenia
+        SafeDOM.setVisible('btn-add-list', role === ROLES.REPORTER || Permissions.canManageBudget(role));
 
         // FILTR: Jeśli Reporter -> widzi tylko swoje
         if (role === ROLES.REPORTER) {
@@ -225,17 +228,17 @@ const App = {
 
     renderSettings: () => {
         const s = State.getActiveSeason();
-        if(!s) return;
+        if (!s) return;
         SafeDOM.val('edit-season-name', s.name);
         SafeDOM.val('edit-season-budget', s.budget);
         SafeDOM.val('edit-season-episodes', s.episodes);
 
         const tbody = SafeDOM.get('episodes-meta-list');
-        if(tbody) {
+        if (tbody) {
             tbody.innerHTML = '';
             const frag = document.createDocumentFragment();
-            for(let i=1; i<=(s.episodes||0); i++) {
-                const m = (s.episodesData||{})[i] || {};
+            for (let i = 1; i <= (s.episodes || 0); i++) {
+                const m = (s.episodesData || {})[i] || {};
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td>${i}</td>
                     <td><input class="sap-input ep-id" data-ep="${i}" value="${Utils.escape(m.id)}"></td>
@@ -247,7 +250,7 @@ const App = {
         }
 
         const slist = SafeDOM.get('seasons-list');
-        if(slist) {
+        if (slist) {
             slist.innerHTML = '';
             const frag = document.createDocumentFragment();
             State.data.seasons.forEach(ss => {
@@ -283,7 +286,7 @@ const App = {
 
         const authorUser = State.data.users.find(u => u.email === j.author);
         SafeDOM.text('detail-author-name', authorUser ? authorUser.name : (j.author || 'Nieznany'));
-        
+
         const form = SafeDOM.get('order-form');
         form.dataset.id = id;
         SafeDOM.val('job-title', j.title);
@@ -293,8 +296,8 @@ const App = {
         SafeDOM.val('job-manual-cost', j.manualCost || '');
         SafeDOM.val('job-date', j.date);
         SafeDOM.text('job-date-display', j.date);
-        
-        if(j.episodeId) {
+
+        if (j.episodeId) {
             SafeDOM.val('job-episode', j.episodeId);
             SafeDOM.text('job-episode-display', "Odcinek " + j.episodeId);
         } else {
@@ -316,25 +319,25 @@ const App = {
         SafeDOM.val('cost-transport', j.logistics?.transport?.cost || '');
 
         App._applyOrderFormVisibility();
-        
+
         // --- FIX: PRZYCISKI ---
         SafeDOM.get('btn-delete-job')?.remove();
         SafeDOM.get('btn-confirm-crew')?.remove();
 
         const role = State.getCurrentRole();
 
-        if(Permissions.canManageBudget(role)) {
+        if (Permissions.canManageBudget(role)) {
             if (j.status === STATUS_MAP.APPROVED.id) {
                 const btn = document.createElement('button');
                 btn.id = 'btn-confirm-crew';
-                btn.type = 'button'; 
-                btn.className = 'btn btn-approve'; 
+                btn.type = 'button';
+                btn.className = 'btn btn-approve';
                 btn.style.marginTop = '20px';
                 btn.innerText = 'Zatwierdź Ekipę (Do Realizacji)';
                 btn.onclick = () => App.confirmCrew(id);
                 form.appendChild(btn);
             }
-            
+
             const delBtn = document.createElement('button');
             delBtn.id = 'btn-delete-job';
             delBtn.type = 'button';
@@ -354,7 +357,7 @@ const App = {
         SafeDOM.setVisible('group-job-cost', canManageProd);
         document.querySelectorAll('.prod-only').forEach(el => SafeDOM.setVisible(el.id, canManageProd));
         document.querySelectorAll('#wrap-hotel .prod-only, #wrap-transport .prod-only').forEach(el => {
-            if(canManageProd) el.classList.remove('hidden'); else el.classList.add('hidden');
+            if (canManageProd) el.classList.remove('hidden'); else el.classList.add('hidden');
         });
     },
 
@@ -363,8 +366,8 @@ const App = {
         try {
             const editId = SafeDOM.get('order-form').dataset.id;
             const { crew, phonebookUpdated } = App._collectCrewData();
-            
-            if(phonebookUpdated) {
+
+            if (phonebookUpdated) {
                 try {
                     const current = JSON.parse(localStorage.getItem(CONFIG.STORAGE_PHONEBOOK) || '{}');
                 } catch (e) { console.warn("Phonebook error"); }
@@ -380,8 +383,8 @@ const App = {
                 manualCost: Utils.safeNumber(SafeDOM.val('job-manual-cost')) || null,
                 seasonId: State.activeSeasonId,
                 // ZMIANA: Zachowujemy oryginalnego autora przy edycji
-                author: editId ? (State.data.jobs.find(j=>j.id==editId)||{}).author : State.user.email,
-                status: editId ? (State.data.jobs.find(j=>j.id==editId)||{}).status : STATUS_MAP.PENDING.id,
+                author: editId ? (State.data.jobs.find(j => j.id == editId) || {}).author : State.user.email,
+                status: editId ? (State.data.jobs.find(j => j.id == editId) || {}).status : STATUS_MAP.PENDING.id,
                 crew: crew,
                 logistics: App._getLogisticsData()
             };
@@ -389,7 +392,7 @@ const App = {
             await DataService.saveDoc(COLLECTIONS.JOBS, jobData, editId);
             UI.toast('Zapisano');
             Router.back();
-        } catch (e) { Logger.error("Save Job", e); } 
+        } catch (e) { Logger.error("Save Job", e); }
         finally { UI.toggleLoader(false); }
     },
 
@@ -397,7 +400,7 @@ const App = {
         const crew = [];
         let phonebookUpdated = false;
         let phonebook = {};
-        try { phonebook = JSON.parse(localStorage.getItem(CONFIG.STORAGE_PHONEBOOK) || '{}'); } catch(e) {}
+        try { phonebook = JSON.parse(localStorage.getItem(CONFIG.STORAGE_PHONEBOOK) || '{}'); } catch (e) { }
 
         document.querySelectorAll('.crew-row-item').forEach(r => {
             const cName = r.querySelector('.crew-name').value.trim();
@@ -413,37 +416,37 @@ const App = {
                 cost: Utils.safeNumber(r.querySelector('.crew-cost')?.value)
             });
         });
-        if(phonebookUpdated) localStorage.setItem(CONFIG.STORAGE_PHONEBOOK, JSON.stringify(phonebook));
+        if (phonebookUpdated) localStorage.setItem(CONFIG.STORAGE_PHONEBOOK, JSON.stringify(phonebook));
         return { crew, phonebookUpdated };
     },
 
     _getLogisticsData: () => {
         return {
-            hotel: { 
-                needed: SafeDOM.isChecked('check-hotel'), 
-                details: SafeDOM.val('desc-hotel'), 
-                cost: SafeDOM.val('cost-hotel') 
+            hotel: {
+                needed: SafeDOM.isChecked('check-hotel'),
+                details: SafeDOM.val('desc-hotel'),
+                cost: SafeDOM.val('cost-hotel')
             },
-            transport: { 
-                needed: SafeDOM.isChecked('check-transport'), 
-                details: SafeDOM.val('desc-transport'), 
-                cost: SafeDOM.val('cost-transport') 
+            transport: {
+                needed: SafeDOM.isChecked('check-transport'),
+                details: SafeDOM.val('desc-transport'),
+                cost: SafeDOM.val('cost-transport')
             }
         };
     },
 
     deleteJob: async (id) => {
-        if(!confirm('Czy na pewno chcesz usunąć to zlecenie?')) return;
+        if (!confirm('Czy na pewno chcesz usunąć to zlecenie?')) return;
         UI.toggleLoader(true);
         try { await DataService.deleteDoc(COLLECTIONS.JOBS, id); UI.toast('Usunięto'); Router.back(); }
-        catch(e) { Logger.error("Delete Job", e); } finally { UI.toggleLoader(false); }
+        catch (e) { Logger.error("Delete Job", e); } finally { UI.toggleLoader(false); }
     },
 
     confirmCrew: async (id) => {
-        if(!confirm('Zlecenie zmieni status na "W Realizacji".')) return;
+        if (!confirm('Zlecenie zmieni status na "W Realizacji".')) return;
         UI.toggleLoader(true);
         try { await DataService.saveDoc(COLLECTIONS.JOBS, { status: STATUS_MAP.READY.id }, id); UI.toast('Zatwierdzono'); Router.back(); }
-        catch(e) { Logger.error("Status Change", e); } finally { UI.toggleLoader(false); }
+        catch (e) { Logger.error("Status Change", e); } finally { UI.toggleLoader(false); }
     },
 
     handlePaxDecision: (id, isApproved) => {
@@ -455,11 +458,11 @@ const App = {
         const { id, isApproved } = App.tempDecision;
         const comment = SafeDOM.val('decision-comment');
         if (!isApproved && !comment) return UI.toast('Wymagany komentarz przy odrzuceniu!', 'error');
-        
+
         try {
-            await DataService.saveDoc(COLLECTIONS.JOBS, { 
-                status: isApproved ? STATUS_MAP.APPROVED.id : STATUS_MAP.REJECTED.id, 
-                paxComment: comment 
+            await DataService.saveDoc(COLLECTIONS.JOBS, {
+                status: isApproved ? STATUS_MAP.APPROVED.id : STATUS_MAP.REJECTED.id,
+                paxComment: comment
             }, id);
             UI.closeModal('modal-decision');
             UI.toast('Decyzja zapisana');
@@ -467,7 +470,7 @@ const App = {
     },
 
     toggleLogistics: (type) => SafeDOM.setVisible('wrap-' + type, SafeDOM.isChecked('check-' + type)),
-    
+
     addCrewRow: (data = {}) => {
         const id = Utils.generateId();
         const showCost = Permissions.canManageBudget(State.getCurrentRole());
@@ -476,29 +479,29 @@ const App = {
         div.innerHTML = `
             <div class="crew-role-badge" id="rd-${id}" onclick="window.Selector.openRoles('rd-${id}','rv-${id}')">
                 <i data-lucide="user-circle" style="width:20px; height:20px; margin-bottom:4px;"></i>
-                <span class="role-text" style="font-size:9px; font-weight:700; text-transform:uppercase; text-align:center; line-height:1.1;">${data.role||'WYBIERZ'}</span>
+                <span class="role-text" style="font-size:9px; font-weight:700; text-transform:uppercase; text-align:center; line-height:1.1;">${data.role || 'WYBIERZ'}</span>
             </div>
-            <input type="hidden" class="crew-role" id="rv-${id}" value="${data.role||''}">
+            <input type="hidden" class="crew-role" id="rv-${id}" value="${data.role || ''}">
             <div class="crew-info-stack">
-                <input type="text" class="crew-input-name crew-name" placeholder="Imię i Nazwisko" value="${data.name||''}" onblur="window.App.autofillPhone(this)">
+                <input type="text" class="crew-input-name crew-name" placeholder="Imię i Nazwisko" value="${data.name || ''}" onblur="window.App.autofillPhone(this)">
                 <div style="display:flex; align-items:center; gap:4px; opacity:0.7;" class="${Permissions.canManageBudget(State.getCurrentRole()) ? '' : 'hidden'}">
                     <i data-lucide="phone" style="width:10px; height:10px;"></i>
-                    <input type="tel" class="crew-input-phone crew-phone" placeholder="Telefon..." value="${data.phone||''}">
+                    <input type="tel" class="crew-input-phone crew-phone" placeholder="Telefon..." value="${data.phone || ''}">
                 </div>
             </div>
             <div class="crew-actions">
                 <button type="button" class="btn-remove-row" onclick="this.closest('.crew-row-item').remove()" style="width:24px; height:24px; font-size:16px; background:transparent; color:var(--ios-red);">
                     <i data-lucide="x"></i>
                 </button>
-                ${showCost ? `<input type="number" class="crew-input-cost crew-cost" placeholder="0" value="${data.cost||''}">` : ''}
+                ${showCost ? `<input type="number" class="crew-input-cost crew-cost" placeholder="0" value="${data.cost || ''}">` : ''}
             </div>`;
         SafeDOM.get('crew-list')?.appendChild(div);
-        if(window.lucide) window.lucide.createIcons();
+        if (window.lucide) window.lucide.createIcons();
     },
-    
+
     autofillPhone: (nameInput) => {
         const name = nameInput.value.trim();
-        if(!name) return;
+        if (!name) return;
         try {
             const phonebook = JSON.parse(localStorage.getItem(CONFIG.STORAGE_PHONEBOOK) || '{}');
             const row = nameInput.closest('.crew-row-item');
@@ -509,22 +512,22 @@ const App = {
             }
         } catch (e) { /* Ignore parsing errors */ }
     },
-    
+
     // ============================================================
     // === MODUŁ FINANSOWY (Produkcja + Globalne) ===
     // ============================================================
 
     switchFinanceTab: (mode) => {
         State.financeViewMode = mode; // 'production' lub 'global'
-        
+
         // Przełączanie klasy .active na przyciskach
         SafeDOM.get('tab-prod')?.classList.toggle('active', mode === 'production');
         SafeDOM.get('tab-global')?.classList.toggle('active', mode === 'global');
-        
+
         // Pokazywanie/ukrywanie kontenerów
         SafeDOM.setVisible('finance-production-view', mode === 'production');
         SafeDOM.setVisible('finance-global-view', mode === 'global');
-        
+
         App.renderFinances();
     },
 
@@ -540,7 +543,7 @@ const App = {
     createGlobalBudget: async (name) => {
         const budgetStr = prompt(`Jaki jest limit budżetu dla "${name}"? (Wpisz liczbę PLN)`);
         const budget = Utils.safeNumber(budgetStr);
-        
+
         if (name && budget > 0) {
             UI.toggleLoader(true);
             try {
@@ -551,7 +554,7 @@ const App = {
                     author: State.user.email
                 });
                 UI.toast('Utworzono nowy budżet');
-            } catch(e) { Logger.error("Błąd tworzenia budżetu", e); }
+            } catch (e) { Logger.error("Błąd tworzenia budżetu", e); }
             finally { UI.toggleLoader(false); }
         }
     },
@@ -559,15 +562,15 @@ const App = {
     renderFinances: () => {
         const isGlobal = State.financeViewMode === 'global';
         const s = State.getActiveSeason();
-        
+
         // --- 1. LISTA OSTATNICH WYDATKÓW (Wspólna) ---
         const listContainer = SafeDOM.get('finance-list');
         if (listContainer) {
             listContainer.innerHTML = '';
             const frag = document.createDocumentFragment();
-            
+
             let relevantCosts = [];
-            
+
             if (isGlobal) {
                 // Pokaż tylko koszty przypisane do budżetów globalnych
                 relevantCosts = State.data.extraCosts.filter(c => c.globalBudgetId);
@@ -577,11 +580,11 @@ const App = {
             }
 
             // Renderuj ostatnie 20
-            relevantCosts.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 20).forEach(ex => {
+            relevantCosts.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 20).forEach(ex => {
                 const row = document.createElement('div');
                 row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); cursor:pointer;';
                 row.onclick = () => App.openEditCost(ex.id);
-                
+
                 const icon = isGlobal ? 'public' : 'movie';
                 // Jeśli globalny: pokaż nazwę budżetu. Jeśli produkcja: pokaż odcinek.
                 let subTitle = 'Ogólny';
@@ -609,10 +612,10 @@ const App = {
         }
 
         // --- 2. WIDOK GŁÓWNY (Logika rozdzielona) ---
-        
+
         if (!isGlobal) {
             // >>> WIDOK PRODUKCJI (Stara logika) <<<
-            if(!s) return;
+            if (!s) return;
             SafeDOM.text('finance-season-name', s.name);
 
             let totalSpent = 0;
@@ -631,7 +634,7 @@ const App = {
                 }
                 if (cost > 0) {
                     totalSpent += cost;
-                    if(j.episodeId) epCosts[j.episodeId] = (epCosts[j.episodeId] || 0) + cost;
+                    if (j.episodeId) epCosts[j.episodeId] = (epCosts[j.episodeId] || 0) + cost;
                 }
             });
 
@@ -639,29 +642,29 @@ const App = {
             State.data.extraCosts.filter(c => !c.globalBudgetId && c.seasonId === s.id).forEach(c => {
                 const amt = Utils.safeNumber(c.amount);
                 totalSpent += amt;
-                if(c.episodeId) epCosts[c.episodeId] = (epCosts[c.episodeId] || 0) + amt;
+                if (c.episodeId) epCosts[c.episodeId] = (epCosts[c.episodeId] || 0) + amt;
             });
 
             SafeDOM.text('season-spent', `${totalSpent} PLN`);
             SafeDOM.text('season-total', `${budget} PLN`);
             SafeDOM.text('season-remaining', `${budget - totalSpent} PLN`);
-            SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent/budget)*100, 100) : 0}%`);
+            SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent / budget) * 100, 100) : 0}%`);
 
             // Grid odcinków
             const grid = SafeDOM.get('episodes-grid');
-            if(grid) {
+            if (grid) {
                 grid.innerHTML = '';
                 const avg = budget / (s.episodes || 1);
-                
+
                 // ZMIANA: NUMERACJA STARTOWA
                 const startNum = Utils.getSeasonStart(s.name);
                 const count = s.episodes || 12;
 
                 const frag = document.createDocumentFragment();
-                for(let i=0; i<count; i++) {
+                for (let i = 0; i < count; i++) {
                     const currentNum = startNum + i;
                     const c = epCosts[currentNum] || 0;
-                    
+
                     const d = document.createElement('div');
                     d.className = 'episode-cell';
                     if (c > avg) d.style.borderColor = 'var(--ios-red)';
@@ -677,7 +680,7 @@ const App = {
             const container = SafeDOM.get('global-budgets-list');
             if (container) {
                 container.innerHTML = '';
-                
+
                 if (State.data.globalBudgets.length === 0) {
                     container.innerHTML = '<div style="text-align:center; color:#666; padding:40px;">Brak budżetów.<br>Kliknij <b>+ Dodaj</b> u góry.</div>';
                 } else {
@@ -686,9 +689,9 @@ const App = {
                         const spent = State.data.extraCosts
                             .filter(c => c.globalBudgetId === gb.id)
                             .reduce((sum, c) => sum + Utils.safeNumber(c.amount), 0);
-                        
+
                         const percent = Math.min((spent / gb.totalLimit) * 100, 100);
-                        
+
                         const card = document.createElement('div');
                         card.className = 'global-budget-card';
                         card.innerHTML = `
@@ -713,11 +716,11 @@ const App = {
 
     setCostType: (type) => {
         SafeDOM.val('cost-type', type); // Ustaw hidden input
-        
+
         // Style przycisków
         document.querySelectorAll('.role-opt').forEach(el => el.classList.remove('active'));
         SafeDOM.get('type-opt-' + type)?.classList.add('active');
-        
+
         // Widoczność sekcji
         SafeDOM.setVisible('group-cost-episode', type === 'episode');
         SafeDOM.setVisible('group-cost-global', type === 'global');
@@ -725,11 +728,11 @@ const App = {
 
     openEditCost: (id) => {
         const cost = State.data.extraCosts.find(c => c.id === id);
-        
+
         SafeDOM.val('cost-id', cost ? cost.id : '');
         SafeDOM.val('cost-title', cost ? cost.title : '');
         SafeDOM.val('cost-amount', cost ? cost.amount : '');
-        
+
         // 1. Wypełnij listę rozwijaną budżetów globalnych
         const select = SafeDOM.get('cost-global-select');
         select.innerHTML = '<option value="">-- Wybierz Budżet --</option>';
@@ -747,7 +750,7 @@ const App = {
         } else if (!cost && State.financeViewMode === 'global') {
             type = 'global'; // Domyślnie globalny, jeśli jesteśmy w zakładce globalnej
         }
-        
+
         // 3. Ustaw interfejs pod ten typ
         App.setCostType(type);
 
@@ -756,7 +759,7 @@ const App = {
             SafeDOM.val('cost-episode-input', cost?.episodeId || '');
             SafeDOM.text('cost-episode-display', cost?.episodeId ? `Odcinek ${cost.episodeId}` : 'Nie wybrano');
         } else {
-            if(cost) select.value = cost.globalBudgetId;
+            if (cost) select.value = cost.globalBudgetId;
         }
 
         SafeDOM.text('cost-modal-title', cost ? 'Edytuj Koszt' : 'Dodaj Koszt');
@@ -767,7 +770,7 @@ const App = {
     saveExtraCost: async () => {
         const id = SafeDOM.val('cost-id');
         const type = SafeDOM.val('cost-type'); // 'episode' lub 'global'
-        
+
         try {
             const data = {
                 title: SafeDOM.val('cost-title'),
@@ -786,23 +789,23 @@ const App = {
             }
 
             // Walidacja
-            if(!data.title || !data.amount) return UI.toast('Uzupełnij nazwę i kwotę', 'error');
-            if(type === 'global' && !data.globalBudgetId) return UI.toast('Wybierz budżet globalny z listy', 'error');
+            if (!data.title || !data.amount) return UI.toast('Uzupełnij nazwę i kwotę', 'error');
+            if (type === 'global' && !data.globalBudgetId) return UI.toast('Wybierz budżet globalny z listy', 'error');
 
             await DataService.saveDoc(COLLECTIONS.COSTS, data, id || null);
             UI.closeModal('modal-cost');
             UI.toast('Zapisano koszt');
-        } catch(e) { Logger.error("Save Cost", e); }
+        } catch (e) { Logger.error("Save Cost", e); }
     },
 
     deleteCost: async () => {
         const id = SafeDOM.val('cost-id');
-        if(!id || !confirm('Usunąć koszt?')) return;
+        if (!id || !confirm('Usunąć koszt?')) return;
         try {
             await DataService.deleteDoc(COLLECTIONS.COSTS, id);
             UI.closeModal('modal-cost');
             UI.toast('Usunięto');
-        } catch(e) { Logger.error("Delete Cost", e); }
+        } catch (e) { Logger.error("Delete Cost", e); }
     },
 
     // Admin features
@@ -827,11 +830,11 @@ const App = {
             };
             await DataService.saveDoc(COLLECTIONS.SEASONS, data);
             UI.toast('Dodano sezon');
-        } catch(e) { Logger.error("Add Season", e); }
+        } catch (e) { Logger.error("Add Season", e); }
     },
     updateActiveSeason: async () => {
         const s = State.getActiveSeason();
-        if(!s) return;
+        if (!s) return;
         try {
             const data = {
                 ...s,
@@ -841,7 +844,7 @@ const App = {
             };
             await DataService.saveDoc(COLLECTIONS.SEASONS, data, s.id);
             UI.toast('Zaktualizowano');
-        } catch(e) { Logger.error("Update Season", e); }
+        } catch (e) { Logger.error("Update Season", e); }
     },
     saveEpisodeMeta: async () => {
         const s = State.getActiveSeason();
@@ -857,7 +860,7 @@ const App = {
             });
             await DataService.saveDoc(COLLECTIONS.SEASONS, { episodesData: newMeta }, s.id);
             UI.toast('Zapisano');
-        } catch(e) { Logger.error("Save Meta", e); }
+        } catch (e) { Logger.error("Save Meta", e); }
     }
 };
 

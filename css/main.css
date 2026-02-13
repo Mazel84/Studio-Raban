@@ -210,7 +210,7 @@
 
         #toast-container { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); z-index: 10000; width: 90%; max-width: 350px; pointer-events: none; }
         .toast { background: rgba(40, 40, 40, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--border-light); color: white; padding: 12px 18px; border-radius: 25px; text-align: center; font-size: 14px; margin-bottom: 10px; pointer-events: auto; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .sap-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
         .sap-table th { text-align: left; padding: 8px; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.1); }

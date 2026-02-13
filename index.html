@@ -1,481 +1,572 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
-    <meta content="yes" name="apple-mobile-web-app-capable"/>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        name="viewport" />
+    <meta content="yes" name="apple-mobile-web-app-capable" />
     <meta name="mobile-web-app-capable" content="yes">
-    <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
-    <meta content="#000000" name="theme-color"/>
+    <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style" />
+    <meta content="#000000" name="theme-color" />
     <title>Studio Raban Manager 7.0 (Refactored)</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0"
+        rel="stylesheet" />
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <link rel="stylesheet" href="css/main.css"> 
-    
+    <link rel="stylesheet" href="css/main.css">
+
 </head>
+
 <body>
-<div id="loader">
-    <div class="spinner"></div>
-    <div style="font-weight: 600; letter-spacing: 1px;">STUDIO RABAN</div>
-    <div style="margin-top:10px; font-size:12px; color:#888;">Ładowanie systemu...</div>
-</div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div style="font-weight: 600; letter-spacing: 1px;">STUDIO RABAN</div>
+        <div style="margin-top:10px; font-size:12px; color:#888;">Ładowanie systemu...</div>
+    </div>
 
-<div id="toast-container"></div>
+    <div id="toast-container"></div>
 
-<div class="modal-overlay" id="modal-calendar">
-    <div class="modal-content">
-        <div class="modal-header">
-            <span class="modal-title">Wybierz datę</span>
-            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-calendar')">Anuluj</button>
-        </div>
-        <div class="cal-header">
-            <span id="cal-month-year" style="font-weight:700; font-size:18px;">Miesiąc Rok</span>
-            <div style="display:flex; gap:15px; opacity: 0.5;">
-                <span class="material-symbols-outlined">chevron_left</span>
-                <span class="material-symbols-outlined">chevron_right</span>
+    <div class="modal-overlay" id="modal-calendar">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Wybierz datę</span>
+                <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-calendar')">Anuluj</button>
             </div>
-        </div>
-        <div class="cal-week-row">
-            <div class="cal-weekday">Pn</div>
-            <div class="cal-weekday">Wt</div>
-            <div class="cal-weekday">Śr</div>
-            <div class="cal-weekday">Cz</div>
-            <div class="cal-weekday">Pt</div>
-            <div class="cal-weekday">Sb</div>
-            <div class="cal-weekday">Nd</div>
-        </div>
-        <div class="cal-grid" id="cal-days-container"></div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-selector">
-    <div class="modal-content">
-        <div class="modal-header">
-            <span class="modal-title" id="selector-title">Wybierz opcję</span>
-            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-selector')">Anuluj</button>
-        </div>
-        <div id="selector-list"></div>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-decision">
-    <div class="modal-content">
-        <div class="modal-header">
-            <span class="modal-title">Decyzja Paxa</span>
-            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-decision')">Anuluj</button>
-        </div>
-        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">Dodaj komentarz (wymagane przy odrzuceniu):</p>
-        <div class="input-group">
-            <textarea class="input-field" id="decision-comment" placeholder="Wpisz tutaj swoje uwagi..." style="border:1px solid var(--ios-indigo);"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="window.App.submitPaxDecision()">Zatwierdź Decyzję</button>
-    </div>
-</div>
-
-<div class="modal-overlay" id="modal-cost">
-    <div class="modal-content">
-        <div class="modal-header">
-            <span class="modal-title" id="cost-modal-title">Dodaj Koszt Dodatkowy</span>
-            <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-cost')">Anuluj</button>
-        </div>
-        <form onsubmit="event.preventDefault();">
-            <input type="hidden" id="cost-id">
-            
-            <div class="input-group" style="margin-bottom: 15px;">
-                <label style="color:var(--brand-color);">Przypisz koszt do:</label>
-                <div class="role-switch" style="margin-top:5px;">
-                    <div id="type-opt-episode" class="role-opt active" onclick="window.App.setCostType('episode')">Odcinek</div>
-                    <div id="type-opt-global" class="role-opt" onclick="window.App.setCostType('global')">Budżet Globalny</div>
+            <div class="cal-header">
+                <span id="cal-month-year" style="font-weight:700; font-size:18px;">Miesiąc Rok</span>
+                <div style="display:flex; gap:15px;">
+                    <span class="material-symbols-outlined" onclick="window.Calendar.prevMonth()"
+                        style="cursor:pointer; opacity:0.6;">chevron_left</span>
+                    <span class="material-symbols-outlined" onclick="window.Calendar.nextMonth()"
+                        style="cursor:pointer; opacity:0.6;">chevron_right</span>
                 </div>
-                <input type="hidden" id="cost-type" value="episode">
             </div>
-
-            <div class="input-group">
-                <label>Nazwa Kosztu</label>
-                <input class="input-field" id="cost-title" placeholder="np. Catering, Sprzęt" required type="text">
+            <div class="cal-week-row">
+                <div class="cal-weekday">Pn</div>
+                <div class="cal-weekday">Wt</div>
+                <div class="cal-weekday">Śr</div>
+                <div class="cal-weekday">Cz</div>
+                <div class="cal-weekday">Pt</div>
+                <div class="cal-weekday">Sb</div>
+                <div class="cal-weekday">Nd</div>
             </div>
-            <div class="input-group">
-                <label>Kwota (PLN)</label>
-                <input class="input-field" id="cost-amount" placeholder="0" required type="number">
-            </div>
-
-            <div class="input-group" id="group-cost-episode">
-                <label>Przypisz do Odcinka</label>
-                <div class="input-field input-clickable" id="cost-episode-display" onclick="window.Selector.openEpisodes('cost-episode-input', 'cost-episode-display')">
-                    Nie wybrano
-                </div>
-                <input type="hidden" id="cost-episode-input">
-            </div>
-
-            <div class="input-group hidden" id="group-cost-global">
-                <label>Wybierz Budżet</label>
-                <select id="cost-global-select" class="input-field" style="background:rgba(255,255,255,0.1); color:white;">
-                    <option value="">-- Wybierz Budżet --</option>
-                </select>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button type="button" id="btn-delete-cost" class="btn btn-reject hidden" style="width: auto;" onclick="window.App.deleteCost()">Usuń</button>
-                <button type="button" onclick="window.App.saveExtraCost()" class="btn btn-primary" style="flex:1;">Zapisz</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="app-container hidden" id="view-login">
-    <div style="height: 10vh;"></div>
-    <div style="text-align: center; margin-bottom: 40px;">
-        <div style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
-            <i data-lucide="clapperboard" style="width: 50px; height: 50px;"></i>
-        </div>
-        <h1>Studio Raban</h1>
-        <p style="color: var(--text-secondary);">Manager Produkcji</p>
-    </div>
-    <div class="card">
-        <h2 id="auth-title">Logowanie</h2>
-        <div id="login-fields">
-            <div class="input-group">
-                <label>Email</label>
-                <input class="input-field" id="login-email" placeholder="Twój E-mail" type="email"/>
-            </div>
-            <div class="input-group">
-                <label>Hasło</label>
-                <input class="input-field" id="login-pass" placeholder="Twoje Hasło" type="password"/>
-            </div>
-        </div>
-       
-        <div class="input-group" style="flex-direction:row; align-items:center; gap:10px; margin: 15px 0;">
-    <input type="checkbox" id="reg-terms" style="width:20px; height:20px; accent-color:var(--brand-color);">
-    <label for="reg-terms" style="font-size:13px; color:#ccc; margin:0;">
-        Oświadczam, że zapoznałem/am się z <a href="#" onclick="window.UI.openModal('modal-terms'); return false;" style="color:var(--brand-color); text-decoration:underline;">Notą Prawną i Zasadami (Disclaimer)</a>
-    </label>
-</div>
-       
-<div class="hidden" id="register-fields">
-            <div class="input-group">
-                <label>Email</label>
-                <input class="input-field" id="reg-email" placeholder="Twój E-mail" type="email"/>
-            </div>
-            <div class="input-group">
-                <label>Hasło (min. 6 znaków)</label>
-                <input class="input-field" id="reg-pass" placeholder="Ustaw Hasło" type="password"/>
-            </div>
-            <div class="input-group">
-                <label>Imię i Nazwisko</label>
-                <input class="input-field" id="reg-name" placeholder="Imię i Nazwisko" type="text"/>
-            </div>
-            <div style="margin-bottom: 10px; font-size: 13px; color: var(--text-secondary); margin-left: 4px;">Wybierz Rolę:</div>
-            <div class="role-switch">
-                <div class="role-opt active" onclick="window.Auth.setRole('reporter', this)">Reporter</div>
-                <div class="role-opt" onclick="window.Auth.setRole('pax', this)">pax</div>
-                <div class="role-opt" onclick="window.Auth.setRole('production', this)">Produkcja</div>
-                <div class="role-opt" onclick="window.Auth.setRole('producer', this)">Producent</div>
-            </div>
-        </div>
-        <button class="btn btn-primary" id="btn-auth-action" onclick="window.Auth.process()">Zaloguj się</button>
-        <div style="margin-top: 20px; text-align: center;">
-            <span id="auth-toggle-text" style="font-size: 14px; color: var(--text-secondary);">Pierwszy raz tutaj?</span>
-            <span id="auth-toggle-link" onclick="window.Auth.toggleMode()" style="font-size: 14px; color: var(--brand-color); font-weight: 600; cursor: pointer; margin-left: 5px;">Zarejestruj się</span>
+            <div class="cal-grid" id="cal-days-container"></div>
         </div>
     </div>
-</div>
 
-<div class="hidden" id="app-wrapper">
-    <div class="bottom-nav">
-        <button class="nav-item active" id="nav-dashboard" onclick="window.Router.go('dashboard')"><span class="material-symbols-outlined nav-icon">home</span><span>Pulpit</span></button>
-        <button class="nav-item" id="nav-list" onclick="window.Router.go('list')"><span class="material-symbols-outlined nav-icon">view_agenda</span><span>Zlecenia</span></button>
-        <button class="nav-item hidden" id="nav-finances" onclick="window.Router.go('finances')"><i data-lucide="circle-dollar-sign" class="nav-icon"></i><span>Budżet</span></button>
-        <button class="nav-item hidden" id="nav-settings" onclick="window.Router.go('settings')"><span class="material-symbols-outlined nav-icon">settings</span><span>Opcje</span></button>
-        <button class="nav-item" onclick="window.Auth.logout()"><span class="material-symbols-outlined nav-icon">logout</span><span>Wyloguj</span></button>
+    <div class="modal-overlay" id="modal-selector">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="selector-title">Wybierz opcję</span>
+                <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-selector')">Anuluj</button>
+            </div>
+            <div id="selector-list"></div>
+        </div>
     </div>
 
-    <div class="app-container hidden" id="view-dashboard">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <div>
-                <h3 style="margin:0; color: var(--brand-color);">Dzień dobry</h3>
-                <h1 id="user-name-display">Użytkowniku</h1>
-                <div id="user-role-badge" style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">Rola</div>
+    <div class="modal-overlay" id="modal-decision">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">Decyzja Paxa</span>
+                <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-decision')">Anuluj</button>
             </div>
-            <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <span class="material-symbols-outlined">person</span>
+            <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">Dodaj komentarz (wymagane przy
+                odrzuceniu):</p>
+            <div class="input-group">
+                <textarea class="input-field" id="decision-comment" placeholder="Wpisz tutaj swoje uwagi..."
+                    style="border:1px solid var(--ios-indigo);"></textarea>
             </div>
+            <button class="btn btn-primary" onclick="window.App.submitPaxDecision()">Zatwierdź Decyzję</button>
         </div>
+    </div>
 
-        <div id="admin-switcher" class="card hidden" style="border-color: var(--ios-red);">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                <span class="material-symbols-outlined" style="color:var(--ios-red)">admin_panel_settings</span>
-                <span style="font-weight:700; font-size:14px; color:var(--ios-red)">PANEL ADMINISTRATORA</span>
+    <div class="modal-overlay" id="modal-cost">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title" id="cost-modal-title">Dodaj Koszt Dodatkowy</span>
+                <button class="btn-sm btn-secondary" onclick="window.UI.closeModal('modal-cost')">Anuluj</button>
             </div>
-            <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Podgląd roli:</p>
-            <div class="role-switch">
-                <div class="role-opt" onclick="window.App.adminSwitchRole('reporter')">Reporter</div>
-                <div class="role-opt" onclick="window.App.adminSwitchRole('pax')">Pax</div>
-                <div class="role-opt" onclick="window.App.adminSwitchRole('production')">Produkcja</div>
-                <div class="role-opt" onclick="window.App.adminSwitchRole('producer')">Magda</div>
-            </div>
-        </div>
+            <form onsubmit="event.preventDefault();">
+                <input type="hidden" id="cost-id">
 
-        <div class="hidden" id="mgmt-dashboard">
-            <div style="margin-bottom: 20px;">
-                <div class="dash-card" onclick="window.Router.go('list')" style="display: flex; align-items: center; padding: 20px; gap: 20px; min-height: 90px;">
-                    <div style="background: rgba(255, 214, 10, 0.15); width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                        <span class="material-symbols-outlined" style="color:var(--ios-yellow); font-size: 30px;">pending_actions</span>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label style="color:var(--brand-color);">Przypisz koszt do:</label>
+                    <div class="role-switch" style="margin-top:5px;">
+                        <div id="type-opt-episode" class="role-opt active" onclick="window.App.setCostType('episode')">
+                            Odcinek</div>
+                        <div id="type-opt-global" class="role-opt" onclick="window.App.setCostType('global')">Budżet
+                            Globalny</div>
                     </div>
-                    <div style="flex: 1; text-align: left;">
-                         <div id="dash-pending-text" style="font-size: 20px; font-weight: 700; color: white; letter-spacing: 0.5px;">0 Nowych Zleceń</div>
-                         <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Dotknij, aby zobaczyć oczekujące</div>
-                    </div>
-                    <span class="material-symbols-outlined" style="color: var(--text-secondary); opacity: 0.5;">chevron_right</span>
-                </div>
-            </div>
-            <h2>Ostatnie Aktywności</h2>
-            <div id="recent-jobs-container" style="font-size: 13px; color: #888;"></div>
-        </div>
-        <div class="hidden" id="reporter-dashboard">
-            <div class="card" style="text-align: center; border-color: var(--brand-color); background: rgba(172, 50, 228, 0.1);">
-                <div style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
-                    <i data-lucide="video" style="width: 40px; height: 40px;"></i>
-                </div>
-                <h2>Masz temat?</h2>
-                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Zgłoś temat do akceptacji PAXa.</p>
-                <button class="btn btn-primary" onclick="window.App.openNewOrder()">Nowe Zlecenie +</button>
-            </div>
-            <h2>Moje Tematy</h2>
-            <div id="my-jobs-container"></div>
-        </div>
-    </div>
-
-    <div class="app-container hidden" id="view-list">
-        <div class="view-header">
-            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
-            <h2 class="header-title">Zlecenia</h2>
-            <button class="btn btn-primary btn-sm hidden" id="btn-add-list" onclick="window.App.openNewOrder()" style="margin-left: auto;">+ Dodaj</button>
-        </div>
-        <div class="input-group">
-            <input class="input-field" id="search-jobs" placeholder="Szukaj..." type="text"/>
-        </div>
-        <div id="jobs-list-container"></div>
-    </div>
-
-    <div class="app-container hidden" id="view-order">
-        <div class="view-header">
-            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
-            <h2 class="header-title">Szczegóły</h2>
-        </div>
-                <form id="order-form" onsubmit="event.preventDefault(); window.App.saveJobFromForm();">
-            <div class="card">
-                <h3>Informacje</h3>
-                
-                <div style="text-align:center; margin-bottom:15px; font-size:13px; color:var(--text-secondary);">
-                    Zgłaszający: <span id="detail-author-name" style="color:var(--brand-color); font-weight:700;">--</span>
+                    <input type="hidden" id="cost-type" value="episode">
                 </div>
 
                 <div class="input-group">
-                    <label>Tytuł Felietonu</label>
+                    <label>Nazwa Kosztu</label>
+                    <input class="input-field" id="cost-title" placeholder="np. Catering, Sprzęt" required type="text">
+                </div>
+                <div class="input-group">
+                    <label>Kwota (PLN)</label>
+                    <input class="input-field" id="cost-amount" placeholder="0" required type="number">
+                </div>
 
-                    <input class="input-field" id="job-title" placeholder="np. Sonda o cenach paliwa" required type="text"/>
+                <div class="input-group" id="group-cost-episode">
+                    <label>Przypisz do Odcinka</label>
+                    <div class="input-field input-clickable" id="cost-episode-display"
+                        onclick="window.Selector.openEpisodes('cost-episode-input', 'cost-episode-display')">
+                        Nie wybrano
+                    </div>
+                    <input type="hidden" id="cost-episode-input">
+                </div>
+
+                <div class="input-group hidden" id="group-cost-global">
+                    <label>Wybierz Budżet</label>
+                    <select id="cost-global-select" class="input-field"
+                        style="background:rgba(255,255,255,0.1); color:white;">
+                        <option value="">-- Wybierz Budżet --</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button type="button" id="btn-delete-cost" class="btn btn-reject hidden" style="width: auto;"
+                        onclick="window.App.deleteCost()">Usuń</button>
+                    <button type="button" onclick="window.App.saveExtraCost()" class="btn btn-primary"
+                        style="flex:1;">Zapisz</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="app-container hidden" id="view-login">
+        <div style="height: 10vh;"></div>
+        <div style="text-align: center; margin-bottom: 40px;">
+            <div style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
+                <i data-lucide="clapperboard" style="width: 50px; height: 50px;"></i>
+            </div>
+            <h1>Studio Raban</h1>
+            <p style="color: var(--text-secondary);">Manager Produkcji</p>
+        </div>
+        <div class="card">
+            <h2 id="auth-title">Logowanie</h2>
+            <div id="login-fields">
+                <div class="input-group">
+                    <label>Email</label>
+                    <input class="input-field" id="login-email" placeholder="Twój E-mail" type="email" />
                 </div>
                 <div class="input-group">
-                    <label>Data Realizacji</label>
-                    <div class="input-field input-clickable" id="job-date-trigger" onclick="window.Calendar.open()">
-                        <span id="job-date-display" style="color: var(--text-secondary);">Wybierz datę...</span>
-                        <span class="material-symbols-outlined" style="font-size:20px; color: var(--brand-color);">calendar_today</span>
-                    </div>
-                    <input id="job-date" required type="hidden"/>
-                </div>
-                <div class="input-group">
-                    <label>Lokalizacja (Adres)</label>
-                    <input class="input-field" id="job-location" placeholder="np. Warszawa, Wiejska 10" type="text"/>
-                </div>
-                <div class="input-group" id="group-desc">
-                    <label>Opis Tematu</label>
-                    <textarea class="input-field" id="job-desc" placeholder="Krótko: O czym to jest? Kogo nagrywamy?"></textarea>
-                </div>
-                <div class="input-group" id="group-pax-comment">
-                    <label style="color:var(--ios-indigo);">Komentarz PAXa</label>
-                    <textarea class="input-field" id="job-pax-comment" placeholder="Uwagi do tematu..." style="border-color:var(--ios-indigo);"></textarea>
-                </div>
-                <div class="input-group hidden" id="group-job-cost">
-                    <label style="color:var(--ios-green);">Całkowity Koszt Zlecenia (PLN)</label>
-                    <input class="input-field" id="job-manual-cost" type="number" placeholder="Suma kosztów (opcjonalnie)" style="border-color:var(--ios-green);">
-                    <div style="font-size:10px; color:#666; margin-top:4px;">Wpisanie kwoty tutaj nadpisze sumę z ekipy i logistyki.</div>
-                </div>
-                <div class="input-group hidden" id="group-episode">
-                    <label>Odcinek (Przypisz)</label>
-                    <div class="input-field input-clickable" onclick="window.Selector.openEpisodes('job-episode', 'job-episode-display')">
-                        <span id="job-episode-display" style="color: var(--text-secondary);">Nie wybrano</span>
-                        <span class="material-symbols-outlined" style="font-size:20px;">arrow_drop_down</span>
-                    </div>
-                    <input id="job-episode" type="hidden"/>
+                    <label>Hasło</label>
+                    <input class="input-field" id="login-pass" placeholder="Twoje Hasło" type="password" />
                 </div>
             </div>
 
-            <div class="card">
-                <h3>Logistyka (Dla Produkcji)</h3>
-                <div class="logistics-row">
-                    <label class="logistics-check">
-                        <input type="checkbox" id="check-hotel" onchange="window.App.toggleLogistics('hotel')">
-                        <span class="material-symbols-outlined" style="font-size:18px;">hotel</span> Hotel / Nocleg
+            <div class="hidden" id="register-fields">
+                <div class="input-group" style="flex-direction:row; align-items:center; gap:10px; margin: 15px 0;">
+                    <input type="checkbox" id="reg-terms"
+                        style="width:20px; height:20px; accent-color:var(--brand-color);">
+                    <label for="reg-terms" style="font-size:13px; color:#ccc; margin:0;">
+                        Oświadczam, że zapoznałem/am się z <a href="#"
+                            onclick="window.UI.openModal('modal-terms'); return false;"
+                            style="color:var(--brand-color); text-decoration:underline;">Notą Prawną i Zasadami
+                            (Disclaimer)</a>
                     </label>
-                    <div id="wrap-hotel" class="hidden">
-                        <input type="text" id="desc-hotel" class="input-field" placeholder="Szczegóły" style="font-size:13px; margin-bottom:5px;">
-                        <div class="prod-only hidden" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
-                            <label style="font-size:11px; color:var(--ios-green);">Koszt:</label>
-                            <input type="number" id="cost-hotel" class="input-field" placeholder="PLN" style="padding:8px;">
+                </div>
+                <div class="input-group">
+                    <label>Email</label>
+                    <input class="input-field" id="reg-email" placeholder="Twój E-mail" type="email" />
+                </div>
+                <div class="input-group">
+                    <label>Hasło (min. 6 znaków)</label>
+                    <input class="input-field" id="reg-pass" placeholder="Ustaw Hasło" type="password" />
+                </div>
+                <div class="input-group">
+                    <label>Imię i Nazwisko</label>
+                    <input class="input-field" id="reg-name" placeholder="Imię i Nazwisko" type="text" />
+                </div>
+                <div style="margin-bottom: 10px; font-size: 13px; color: var(--text-secondary); margin-left: 4px;">
+                    Wybierz Rolę:</div>
+                <div class="role-switch">
+                    <div class="role-opt active" onclick="window.Auth.setRole('reporter', this)">Reporter</div>
+                    <div class="role-opt" onclick="window.Auth.setRole('pax', this)">pax</div>
+                    <div class="role-opt" onclick="window.Auth.setRole('production', this)">Produkcja</div>
+                    <div class="role-opt" onclick="window.Auth.setRole('producer', this)">Producent</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="btn-auth-action" onclick="window.Auth.process()">Zaloguj się</button>
+            <div style="margin-top: 20px; text-align: center;">
+                <span id="auth-toggle-text" style="font-size: 14px; color: var(--text-secondary);">Pierwszy raz
+                    tutaj?</span>
+                <span id="auth-toggle-link" onclick="window.Auth.toggleMode()"
+                    style="font-size: 14px; color: var(--brand-color); font-weight: 600; cursor: pointer; margin-left: 5px;">Zarejestruj
+                    się</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="hidden" id="app-wrapper">
+        <div class="bottom-nav">
+            <button class="nav-item active" id="nav-dashboard" onclick="window.Router.go('dashboard')"><span
+                    class="material-symbols-outlined nav-icon">home</span><span>Pulpit</span></button>
+            <button class="nav-item" id="nav-list" onclick="window.Router.go('list')"><span
+                    class="material-symbols-outlined nav-icon">view_agenda</span><span>Zlecenia</span></button>
+            <button class="nav-item hidden" id="nav-finances" onclick="window.Router.go('finances')"><span
+                    class="material-symbols-outlined nav-icon">payments</span><span>Budżet</span></button>
+            <button class="nav-item hidden" id="nav-settings" onclick="window.Router.go('settings')"><span
+                    class="material-symbols-outlined nav-icon">settings</span><span>Opcje</span></button>
+            <button class="nav-item" onclick="window.Auth.logout()"><span
+                    class="material-symbols-outlined nav-icon">logout</span><span>Wyloguj</span></button>
+        </div>
+
+        <div class="app-container hidden" id="view-dashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <div>
+                    <h3 style="margin:0; color: var(--brand-color);">Dzień dobry</h3>
+                    <h1 id="user-name-display">Użytkowniku</h1>
+                    <div id="user-role-badge" style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                        Rola</div>
+                </div>
+                <div
+                    style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <span class="material-symbols-outlined">person</span>
+                </div>
+            </div>
+
+            <div id="admin-switcher" class="card hidden" style="border-color: var(--ios-red);">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <span class="material-symbols-outlined" style="color:var(--ios-red)">admin_panel_settings</span>
+                    <span style="font-weight:700; font-size:14px; color:var(--ios-red)">PANEL ADMINISTRATORA</span>
+                </div>
+                <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">Podgląd roli:</p>
+                <div class="role-switch">
+                    <div class="role-opt" onclick="window.App.adminSwitchRole('reporter')">Reporter</div>
+                    <div class="role-opt" onclick="window.App.adminSwitchRole('pax')">Pax</div>
+                    <div class="role-opt" onclick="window.App.adminSwitchRole('production')">Produkcja</div>
+                    <div class="role-opt" onclick="window.App.adminSwitchRole('producer')">Magda</div>
+                </div>
+            </div>
+
+            <div class="hidden" id="mgmt-dashboard">
+                <div style="margin-bottom: 20px;">
+                    <div class="dash-card" onclick="window.Router.go('list')"
+                        style="display: flex; align-items: center; padding: 20px; gap: 20px; min-height: 90px;">
+                        <div
+                            style="background: rgba(255, 214, 10, 0.15); width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <span class="material-symbols-outlined"
+                                style="color:var(--ios-yellow); font-size: 30px;">pending_actions</span>
+                        </div>
+                        <div style="flex: 1; text-align: left;">
+                            <div id="dash-pending-text"
+                                style="font-size: 20px; font-weight: 700; color: white; letter-spacing: 0.5px;">0 Nowych
+                                Zleceń</div>
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Dotknij, aby
+                                zobaczyć oczekujące</div>
+                        </div>
+                        <span class="material-symbols-outlined"
+                            style="color: var(--text-secondary); opacity: 0.5;">chevron_right</span>
+                    </div>
+                </div>
+                <h2>Ostatnie Aktywności</h2>
+                <div id="recent-jobs-container" style="font-size: 13px; color: #888;"></div>
+            </div>
+            <div class="hidden" id="reporter-dashboard">
+                <div class="card"
+                    style="text-align: center; border-color: var(--brand-color); background: rgba(172, 50, 228, 0.1);">
+                    <div
+                        style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
+                        <i data-lucide="video" style="width: 40px; height: 40px;"></i>
+                    </div>
+                    <h2>Masz temat?</h2>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Zgłoś temat do
+                        akceptacji PAXa.</p>
+                    <button class="btn btn-primary" onclick="window.App.openNewOrder()">Nowe Zlecenie +</button>
+                </div>
+                <h2>Moje Tematy</h2>
+                <div id="my-jobs-container"></div>
+            </div>
+        </div>
+
+        <div class="app-container hidden" id="view-list">
+            <div class="view-header">
+                <button class="btn-back" onclick="window.Router.back()"><span
+                        class="material-symbols-outlined">arrow_back_ios_new</span></button>
+                <h2 class="header-title">Zlecenia</h2>
+                <button class="btn btn-primary btn-sm hidden" id="btn-add-list" onclick="window.App.openNewOrder()"
+                    style="margin-left: auto;">+ Dodaj</button>
+            </div>
+            <div class="input-group">
+                <input class="input-field" id="search-jobs" placeholder="Szukaj..." type="text" />
+            </div>
+            <div id="jobs-list-container"></div>
+        </div>
+
+        <div class="app-container hidden" id="view-order">
+            <div class="view-header">
+                <button class="btn-back" onclick="window.Router.back()"><span
+                        class="material-symbols-outlined">arrow_back_ios_new</span></button>
+                <h2 class="header-title">Szczegóły</h2>
+            </div>
+            <form id="order-form" onsubmit="event.preventDefault(); window.App.saveJobFromForm();">
+                <div class="card">
+                    <h3>Informacje</h3>
+
+                    <div style="text-align:center; margin-bottom:15px; font-size:13px; color:var(--text-secondary);">
+                        Zgłaszający: <span id="detail-author-name"
+                            style="color:var(--brand-color); font-weight:700;">--</span>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Tytuł Felietonu</label>
+
+                        <input class="input-field" id="job-title" placeholder="np. Sonda o cenach paliwa" required
+                            type="text" />
+                    </div>
+                    <div class="input-group">
+                        <label>Data Realizacji</label>
+                        <div class="input-field input-clickable" id="job-date-trigger" onclick="window.Calendar.open()">
+                            <span id="job-date-display" style="color: var(--text-secondary);">Wybierz datę...</span>
+                            <span class="material-symbols-outlined"
+                                style="font-size:20px; color: var(--brand-color);">calendar_today</span>
+                        </div>
+                        <input id="job-date" required type="hidden" />
+                    </div>
+                    <div class="input-group">
+                        <label>Lokalizacja (Adres)</label>
+                        <input class="input-field" id="job-location" placeholder="np. Warszawa, Wiejska 10"
+                            type="text" />
+                    </div>
+                    <div class="input-group" id="group-desc">
+                        <label>Opis Tematu</label>
+                        <textarea class="input-field" id="job-desc"
+                            placeholder="Krótko: O czym to jest? Kogo nagrywamy?"></textarea>
+                    </div>
+                    <div class="input-group" id="group-pax-comment">
+                        <label style="color:var(--ios-indigo);">Komentarz PAXa</label>
+                        <textarea class="input-field" id="job-pax-comment" placeholder="Uwagi do tematu..."
+                            style="border-color:var(--ios-indigo);"></textarea>
+                    </div>
+                    <div class="input-group hidden" id="group-job-cost">
+                        <label style="color:var(--ios-green);">Całkowity Koszt Zlecenia (PLN)</label>
+                        <input class="input-field" id="job-manual-cost" type="number"
+                            placeholder="Suma kosztów (opcjonalnie)" style="border-color:var(--ios-green);">
+                        <div style="font-size:10px; color:#666; margin-top:4px;">Wpisanie kwoty tutaj nadpisze sumę z
+                            ekipy i logistyki.</div>
+                    </div>
+                    <div class="input-group hidden" id="group-episode">
+                        <label>Odcinek (Przypisz)</label>
+                        <div class="input-field input-clickable"
+                            onclick="window.Selector.openEpisodes('job-episode', 'job-episode-display')">
+                            <span id="job-episode-display" style="color: var(--text-secondary);">Nie wybrano</span>
+                            <span class="material-symbols-outlined" style="font-size:20px;">arrow_drop_down</span>
+                        </div>
+                        <input id="job-episode" type="hidden" />
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Logistyka (Dla Produkcji)</h3>
+                    <div class="logistics-row">
+                        <label class="logistics-check">
+                            <input type="checkbox" id="check-hotel" onchange="window.App.toggleLogistics('hotel')">
+                            <span class="material-symbols-outlined" style="font-size:18px;">hotel</span> Hotel / Nocleg
+                        </label>
+                        <div id="wrap-hotel" class="hidden">
+                            <input type="text" id="desc-hotel" class="input-field" placeholder="Szczegóły"
+                                style="font-size:13px; margin-bottom:5px;">
+                            <div class="prod-only hidden"
+                                style="border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
+                                <label style="font-size:11px; color:var(--ios-green);">Koszt:</label>
+                                <input type="number" id="cost-hotel" class="input-field" placeholder="PLN"
+                                    style="padding:8px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="logistics-row">
+                        <label class="logistics-check">
+                            <input type="checkbox" id="check-transport"
+                                onchange="window.App.toggleLogistics('transport')">
+                            <span class="material-symbols-outlined" style="font-size:18px;">train</span> Transport
+                        </label>
+                        <div id="wrap-transport" class="hidden">
+                            <input type="text" id="desc-transport" class="input-field" placeholder="Szczegóły"
+                                style="font-size:13px; margin-bottom:5px;">
+                            <div class="prod-only hidden"
+                                style="border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
+                                <label style="font-size:11px; color:var(--ios-green);">Koszt:</label>
+                                <input type="number" id="cost-transport" class="input-field" placeholder="PLN"
+                                    style="padding:8px;">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="logistics-row">
-                    <label class="logistics-check">
-                        <input type="checkbox" id="check-transport" onchange="window.App.toggleLogistics('transport')">
-                        <span class="material-symbols-outlined" style="font-size:18px;">train</span> Transport
-                    </label>
-                    <div id="wrap-transport" class="hidden">
-                        <input type="text" id="desc-transport" class="input-field" placeholder="Szczegóły" style="font-size:13px; margin-bottom:5px;">
-                        <div class="prod-only hidden" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
-                            <label style="font-size:11px; color:var(--ios-green);">Koszt:</label>
-                            <input type="number" id="cost-transport" class="input-field" placeholder="PLN" style="padding:8px;">
-                        </div>
+                <div class="card">
+                    <h3>Ekipa</h3>
+                    <div id="crew-list"></div>
+                    <button class="btn btn-add-crew" onclick="window.App.addCrewRow()" type="button">+ Dodaj
+                        osobę</button>
+                </div>
+                <button class="btn btn-primary" type="submit">Zapisz / Wyślij</button>
+            </form>
+        </div>
+
+        <div class="app-container hidden" id="view-finances">
+            <div class="view-header">
+                <button class="btn-back" onclick="window.Router.back()"><span
+                        class="material-symbols-outlined">arrow_back_ios_new</span></button>
+                <h2 class="header-title">Budżet</h2>
+                <button class="btn btn-sm btn-secondary" onclick="window.App.handleAddBudgetAction()">+ Dodaj</button>
+            </div>
+
+            <div class="segmented-control-container" style="margin-bottom: 20px;">
+                <div class="segmented-control">
+                    <button id="tab-prod" class="seg-btn active"
+                        onclick="window.App.switchFinanceTab('production')">Produkcja TV</button>
+                    <button id="tab-global" class="seg-btn" onclick="window.App.switchFinanceTab('global')">Budżety
+                        Globalne</button>
+                </div>
+            </div>
+
+            <div id="finance-production-view">
+                <div class="card">
+                    <h3>Sezon: <span id="finance-season-name" style="color:var(--brand-color)"></span></h3>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
+                        <span id="season-spent" style="font-size:24px; font-weight:700;">0 PLN</span>
+                        <span style="color:var(--text-secondary); font-size:12px;">z puli <span
+                                id="season-total">0</span></span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="season-progress" style="width: 0%"></div>
+                    </div>
+                    <div style="margin-top:8px; font-size:12px; color:var(--text-secondary); text-align:right;">
+                        Pozostało: <span id="season-remaining" style="color:white; font-weight:600;">0 PLN</span>
                     </div>
                 </div>
+                <h3 style="margin-left: 4px; color:var(--text-secondary); margin-top:20px;">STATUS ODCINKÓW</h3>
+                <div class="episode-grid" id="episodes-grid"></div>
+            </div>
+
+            <div id="finance-global-view" class="hidden">
+                <div id="global-budgets-list"></div>
+            </div>
+
+            <div class="card" style="margin-top: 30px;">
+                <h3>Ostatnie Wydatki</h3>
+                <div id="finance-list" style="font-size:13px;"></div>
+            </div>
+        </div>
+
+        <div class="app-container hidden" id="view-settings">
+            <div class="view-header">
+                <button class="btn-back" onclick="window.Router.back()"><span
+                        class="material-symbols-outlined">arrow_back_ios_new</span></button>
+                <h2 class="header-title">Opcje</h2>
+            </div>
+
+            <div class="card" style="border-color:var(--brand-color);">
+                <h3>Aktywny Sezon (Edycja)</h3>
+                <form onsubmit="event.preventDefault(); window.App.updateActiveSeason();">
+                    <div class="input-group"><label>Nazwa</label><input class="input-field" id="edit-season-name"
+                            required></div>
+                    <div class="input-group"><label>Budżet (PLN)</label><input class="input-field"
+                            id="edit-season-budget" type="number" required></div>
+                    <div class="input-group"><label>Odcinków</label><input class="input-field" id="edit-season-episodes"
+                            type="number" required></div>
+                    <button class="btn btn-primary" type="submit">Zapisz Zmiany</button>
+                </form>
             </div>
 
             <div class="card">
-                <h3>Ekipa</h3>
-                <div id="crew-list"></div>
-                <button class="btn btn-add-crew" onclick="window.App.addCrewRow()" type="button">+ Dodaj osobę</button>
+                <h3>Manager Odcinków</h3>
+                <div style="overflow-x:auto;">
+                    <table class="sap-table">
+                        <thead>
+                            <tr>
+                                <th style="width:30px">#</th>
+                                <th>ID</th>
+                                <th>SAP E</th>
+                                <th>SAP P</th>
+                            </tr>
+                        </thead>
+                        <tbody id="episodes-meta-list"></tbody>
+                    </table>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="window.App.saveEpisodeMeta()">Zapisz SAP/ID</button>
             </div>
-            <button class="btn btn-primary" type="submit">Zapisz / Wyślij</button>
-        </form>
-    </div>
 
-    <div class="app-container hidden" id="view-finances">
-        <div class="view-header">
-            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
-            <h2 class="header-title">Budżet</h2>
-            <button class="btn btn-sm btn-secondary" onclick="window.App.handleAddBudgetAction()">+ Dodaj</button>
-        </div>
-
-        <div class="segmented-control-container" style="margin-bottom: 20px;">
-            <div class="segmented-control">
-                <button id="tab-prod" class="seg-btn active" onclick="window.App.switchFinanceTab('production')">Produkcja TV</button>
-                <button id="tab-global" class="seg-btn" onclick="window.App.switchFinanceTab('global')">Budżety Globalne</button>
+            <div class="card" style="margin-top:30px; border-top: 1px dashed rgba(255,255,255,0.2);">
+                <h3>Nowy Sezon</h3>
+                <form onsubmit="event.preventDefault(); window.App.addSeason();">
+                    <div class="input-group"><input class="input-field" id="new-season-name" placeholder="Nazwa"
+                            required></div>
+                    <div style="display:flex; gap:10px;">
+                        <div class="input-group" style="flex:1"><input class="input-field" id="new-season-budget"
+                                type="number" placeholder="Budżet" required></div>
+                        <div class="input-group" style="flex:1"><input class="input-field" id="new-season-episodes"
+                                type="number" placeholder="Odcinki" required></div>
+                    </div>
+                    <button class="btn btn-secondary" type="submit">Utwórz</button>
+                </form>
             </div>
-        </div>
 
-        <div id="finance-production-view">
             <div class="card">
-                <h3>Sezon: <span id="finance-season-name" style="color:var(--brand-color)"></span></h3>
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
-                    <span id="season-spent" style="font-size:24px; font-weight:700;">0 PLN</span>
-                    <span style="color:var(--text-secondary); font-size:12px;">z puli <span id="season-total">0</span></span>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-bar" id="season-progress" style="width: 0%"></div>
-                </div>
-                <div style="margin-top:8px; font-size:12px; color:var(--text-secondary); text-align:right;">
-                    Pozostało: <span id="season-remaining" style="color:white; font-weight:600;">0 PLN</span>
-                </div>
+                <h3>Lista Sezonów</h3>
+                <div id="seasons-list"></div>
             </div>
-            <h3 style="margin-left: 4px; color:var(--text-secondary); margin-top:20px;">STATUS ODCINKÓW</h3>
-            <div class="episode-grid" id="episodes-grid"></div>
-        </div>
-
-        <div id="finance-global-view" class="hidden">
-            <div id="global-budgets-list"></div>
-        </div>
-
-        <div class="card" style="margin-top: 30px;">
-            <h3>Ostatnie Wydatki</h3>
-            <div id="finance-list" style="font-size:13px;"></div>
         </div>
     </div>
 
-    <div class="app-container hidden" id="view-settings">
-        <div class="view-header">
-            <button class="btn-back" onclick="window.Router.back()"><span class="material-symbols-outlined">arrow_back_ios_new</span></button>
-            <h2 class="header-title">Opcje</h2>
-        </div>
-        
-        <div class="card" style="border-color:var(--brand-color);">
-            <h3>Aktywny Sezon (Edycja)</h3>
-            <form onsubmit="event.preventDefault(); window.App.updateActiveSeason();">
-                <div class="input-group"><label>Nazwa</label><input class="input-field" id="edit-season-name" required></div>
-                <div class="input-group"><label>Budżet (PLN)</label><input class="input-field" id="edit-season-budget" type="number" required></div>
-                <div class="input-group"><label>Odcinków</label><input class="input-field" id="edit-season-episodes" type="number" required></div>
-                <button class="btn btn-primary" type="submit">Zapisz Zmiany</button>
-            </form>
-        </div>
 
-        <div class="card">
-            <h3>Manager Odcinków</h3>
-            <div style="overflow-x:auto;">
-                <table class="sap-table">
-                    <thead><tr><th style="width:30px">#</th><th>ID</th><th>SAP E</th><th>SAP P</th></tr></thead>
-                    <tbody id="episodes-meta-list"></tbody>
-                </table>
+    <script type="module" src="js/app.js"></script>
+
+    <div id="modal-terms" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px; max-height: 80vh; display:flex; flex-direction:column;">
+            <h3 style="margin-top:0; color:var(--ios-red);">⚠️ NOTA PRAWNA I ZASADY UŻYTKOWANIA</h3>
+
+            <div
+                style="overflow-y: auto; padding-right: 10px; text-align: left; font-size: 13px; line-height: 1.6; color: #ddd; flex:1;">
+
+                <h4 style="color:white; margin:15px 0 5px;">1. Charakter narzędzia (Prywatny Notatnik)</h4>
+                <p>Niniejsza aplikacja stanowi wyłącznie <b>prywatne, cyfrowe narzędzie notatkowe (tzw. "Digital
+                        Assistant")</b> stworzone na potrzeby własne użytkownika, służące do doraźnej organizacji pracy
+                    osobistej.</p>
+                <p>Narzędzie to <b>nie jest Systemem Informatycznym Telewizji Polskiej S.A.</b>, nie jest zintegrowane z
+                    jej infrastrukturą i nie służy do oficjalnego archiwizowania dokumentów.</p>
+
+                <h4 style="color:white; margin:15px 0 5px;">2. Status Danych (Kopia Robocza)</h4>
+                <p>Wszelkie dane wprowadzane do aplikacji (w tym harmonogramy, numery telefonów, szacunki kosztów) mają
+                    status <b>kopii roboczych i brudnopisu</b>.</p>
+                <ul style="padding-left: 20px; margin: 5px 0;">
+                    <li><b>Zabrania się</b> wprowadzania do aplikacji danych objętych klauzulą "Poufne" lub "Tajne" w
+                        rozumieniu polityki bezpieczeństwa TVP.</li>
+                    <li><b>Zabrania się</b> traktowania danych z aplikacji jako wiążących. Jedynym źródłem prawdy są
+                        oficjalne systemy korporacyjne (SAP, oficjalne maile, dyski sieciowe TVP).</li>
+                </ul>
+
+                <h4 style="color:white; margin:15px 0 5px;">3. Anonimizacja (Ochrona RODO)</h4>
+                <p>Użytkownik przyjmuje do wiadomości, że aplikacja wykorzystuje algorytmy AI do sortowania notatek. W
+                    związku z tym <b>zabrania się wprowadzania pełnych danych osobowych osób trzecich</b> (np. PESEL,
+                    adresy zamieszkania) oraz szczegółowych danych wrażliwych.</p>
+                <p>Zaleca się stosowanie <b>pseudonimizacji</b> (np. używanie inicjałów lub funkcji zamiast pełnych
+                    nazwisk przy wrażliwych kwotach).</p>
+
+                <h4 style="color:white; margin:15px 0 5px;">4. Wyłączenie odpowiedzialności twórcy</h4>
+                <p>Narzędzie jest udostępniane współpracownikom na zasadzie <b>koleżeńskiej pomocy w organizacji
+                        (peer-to-peer sharing)</b>. Twórca narzędzia nie pełni roli Administratora Danych w rozumieniu
+                    RODO w imieniu korporacji, a jedynie udostępnia interfejs do zarządzania własnymi notatkami
+                    użytkownika.</p>
+
             </div>
-            <button class="btn btn-secondary btn-sm" onclick="window.App.saveEpisodeMeta()">Zapisz SAP/ID</button>
-        </div>
 
-        <div class="card" style="margin-top:30px; border-top: 1px dashed rgba(255,255,255,0.2);">
-            <h3>Nowy Sezon</h3>
-            <form onsubmit="event.preventDefault(); window.App.addSeason();">
-                <div class="input-group"><input class="input-field" id="new-season-name" placeholder="Nazwa" required></div>
-                <div style="display:flex; gap:10px;">
-                    <div class="input-group" style="flex:1"><input class="input-field" id="new-season-budget" type="number" placeholder="Budżet" required></div>
-                    <div class="input-group" style="flex:1"><input class="input-field" id="new-season-episodes" type="number" placeholder="Odcinki" required></div>
-                </div>
-                <button class="btn btn-secondary" type="submit">Utwórz</button>
-            </form>
-        </div>
-
-        <div class="card">
-            <h3>Lista Sezonów</h3>
-            <div id="seasons-list"></div>
+            <div style="margin-top:20px; text-align:center;">
+                <button class="btn btn-primary" onclick="window.UI.closeModal('modal-terms')">Przeczytałem/am i
+                    Akceptuję</button>
+            </div>
         </div>
     </div>
-</div>
-
-
-<script type="module" src="js/app.js"></script>
-
-<div id="modal-terms" class="modal-overlay">
-    <div class="modal-content" style="max-width: 600px; max-height: 80vh; display:flex; flex-direction:column;">
-        <h3 style="margin-top:0; color:var(--ios-red);">⚠️ NOTA PRAWNA I ZASADY UŻYTKOWANIA</h3>
-        
-        <div style="overflow-y: auto; padding-right: 10px; text-align: left; font-size: 13px; line-height: 1.6; color: #ddd; flex:1;">
-            
-            <h4 style="color:white; margin:15px 0 5px;">1. Charakter narzędzia (Prywatny Notatnik)</h4>
-            <p>Niniejsza aplikacja stanowi wyłącznie <b>prywatne, cyfrowe narzędzie notatkowe (tzw. "Digital Assistant")</b> stworzone na potrzeby własne użytkownika, służące do doraźnej organizacji pracy osobistej.</p>
-            <p>Narzędzie to <b>nie jest Systemem Informatycznym Telewizji Polskiej S.A.</b>, nie jest zintegrowane z jej infrastrukturą i nie służy do oficjalnego archiwizowania dokumentów.</p>
-
-            <h4 style="color:white; margin:15px 0 5px;">2. Status Danych (Kopia Robocza)</h4>
-            <p>Wszelkie dane wprowadzane do aplikacji (w tym harmonogramy, numery telefonów, szacunki kosztów) mają status <b>kopii roboczych i brudnopisu</b>.</p>
-            <ul style="padding-left: 20px; margin: 5px 0;">
-                <li><b>Zabrania się</b> wprowadzania do aplikacji danych objętych klauzulą "Poufne" lub "Tajne" w rozumieniu polityki bezpieczeństwa TVP.</li>
-                <li><b>Zabrania się</b> traktowania danych z aplikacji jako wiążących. Jedynym źródłem prawdy są oficjalne systemy korporacyjne (SAP, oficjalne maile, dyski sieciowe TVP).</li>
-            </ul>
-
-            <h4 style="color:white; margin:15px 0 5px;">3. Anonimizacja (Ochrona RODO)</h4>
-            <p>Użytkownik przyjmuje do wiadomości, że aplikacja wykorzystuje algorytmy AI do sortowania notatek. W związku z tym <b>zabrania się wprowadzania pełnych danych osobowych osób trzecich</b> (np. PESEL, adresy zamieszkania) oraz szczegółowych danych wrażliwych.</p>
-            <p>Zaleca się stosowanie <b>pseudonimizacji</b> (np. używanie inicjałów lub funkcji zamiast pełnych nazwisk przy wrażliwych kwotach).</p>
-
-            <h4 style="color:white; margin:15px 0 5px;">4. Wyłączenie odpowiedzialności twórcy</h4>
-            <p>Narzędzie jest udostępniane współpracownikom na zasadzie <b>koleżeńskiej pomocy w organizacji (peer-to-peer sharing)</b>. Twórca narzędzia nie pełni roli Administratora Danych w rozumieniu RODO w imieniu korporacji, a jedynie udostępnia interfejs do zarządzania własnymi notatkami użytkownika.</p>
-
-        </div>
-
-        <div style="margin-top:20px; text-align:center;">
-            <button class="btn btn-primary" onclick="window.UI.closeModal('modal-terms')">Przeczytałem/am i Akceptuję</button>
-        </div>
-    </div>
-</div>
 
 </body>
+
 </html>

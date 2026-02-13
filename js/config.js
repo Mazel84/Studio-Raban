@@ -23,7 +23,7 @@ export const COLLECTIONS = {
 
 };
 
-    // NOWE: Sztywna numeracja odcinków
+// NOWE: Sztywna numeracja odcinków
 export const SEASON_STARTS = {
     "Zima 2026": 422,
     "Lato 2026": 431,
@@ -32,7 +32,7 @@ export const SEASON_STARTS = {
 
 export const CONFIG = {
     // Twój klucz publiczny (Public Key)
-    VAPID_KEY: "BMm_qK8s5vJg9tZ4e1Xn3pL7o_uY6rW2iQ0aS8dF9hG5jK1lZ4xC3vB2nN7mM9", 
+    VAPID_KEY: "BMm_qK8s5vJg9tZ4e1Xn3pL7o_uY6rW2iQ0aS8dF9hG5jK1lZ4xC3vB2nN7mM9",
     STORAGE_PHONEBOOK: 'sr_phonebook'
 };
 
