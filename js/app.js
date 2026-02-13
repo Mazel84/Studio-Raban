@@ -127,7 +127,6 @@ const App = {
 
         const searchInput = SafeDOM.get('search-jobs');
         if (searchInput) searchInput.addEventListener('keyup', Utils.debounce(() => App.renderList(), 300));
-        if (window.lucide) window.lucide.createIcons();
     },
 
     renderAll: () => {
@@ -175,7 +174,7 @@ const App = {
             const frag = document.createDocumentFragment();
 
             if (displayJobs.length === 0) {
-                container.innerHTML = '<div style="padding:15px; color:#666; text-align:center; font-size:13px;">Brak ostatnich zleceń</div>';
+                container.innerHTML = '<div style="text-align:center; padding:32px 20px;"><span class="material-symbols-outlined" style="font-size:44px; color:rgba(255,255,255,0.12); display:block; margin-bottom:10px;">assignment</span><div style="color:var(--text-secondary); font-size:13px;">Brak zleceń</div><div style="color:rgba(255,255,255,0.25); font-size:11px; margin-top:4px;">Nowe zlecenia pojawią się tutaj</div></div>';
             } else {
                 displayJobs.forEach(j => frag.appendChild(UI.renderJobCard(j)));
                 container.appendChild(frag);

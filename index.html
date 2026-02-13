@@ -12,7 +12,7 @@
     <title>Studio Raban Manager 7.0 (Refactored)</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide removed — using Material Symbols exclusively for consistency -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,1,0"
         rel="stylesheet" />
     <link rel="manifest" href="manifest.json">
@@ -143,8 +143,12 @@
     <div class="app-container hidden" id="view-login">
         <div style="height: 10vh;"></div>
         <div style="text-align: center; margin-bottom: 40px;">
-            <div style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
-                <i data-lucide="clapperboard" style="width: 50px; height: 50px;"></i>
+            <div style="margin-bottom: 16px; display: flex; justify-content: center;">
+                <div
+                    style="width: 72px; height: 72px; border-radius: 20px; background: rgba(172, 50, 228, 0.12); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 40px rgba(172, 50, 228, 0.25), 0 0 80px rgba(172, 50, 228, 0.1);">
+                    <span class="material-symbols-outlined"
+                        style="font-size: 36px; color: var(--brand-color);">movie</span>
+                </div>
             </div>
             <h1>Studio Raban</h1>
             <p style="color: var(--text-secondary);">Manager Produkcji</p>
@@ -273,9 +277,9 @@
             <div class="hidden" id="reporter-dashboard">
                 <div class="card"
                     style="text-align: center; border-color: var(--brand-color); background: rgba(172, 50, 228, 0.1);">
-                    <div
-                        style="margin-bottom: 10px; color: var(--brand-color); display: flex; justify-content: center;">
-                        <i data-lucide="video" style="width: 40px; height: 40px;"></i>
+                    <div style="margin-bottom: 10px; display: flex; justify-content: center;">
+                        <span class="material-symbols-outlined"
+                            style="font-size: 40px; color: var(--brand-color);">videocam</span>
                     </div>
                     <h2>Masz temat?</h2>
                     <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 15px;">Zgłoś temat do
@@ -320,7 +324,7 @@
                         <label>Tytuł Felietonu</label>
 
                         <input class="input-field" id="job-title" placeholder="np. Sonda o cenach paliwa" required
-                            type="text" />
+                            type="text" maxlength="200" />
                     </div>
                     <div class="input-group">
                         <label>Data Realizacji</label>
@@ -333,13 +337,13 @@
                     </div>
                     <div class="input-group">
                         <label>Lokalizacja (Adres)</label>
-                        <input class="input-field" id="job-location" placeholder="np. Warszawa, Wiejska 10"
-                            type="text" />
+                        <input class="input-field" id="job-location" placeholder="np. Warszawa, Wiejska 10" type="text"
+                            maxlength="300" />
                     </div>
                     <div class="input-group" id="group-desc">
                         <label>Opis Tematu</label>
                         <textarea class="input-field" id="job-desc"
-                            placeholder="Krótko: O czym to jest? Kogo nagrywamy?"></textarea>
+                            placeholder="Krótko: O czym to jest? Kogo nagrywamy?" maxlength="2000"></textarea>
                     </div>
                     <div class="input-group" id="group-pax-comment">
                         <label style="color:var(--ios-indigo);">Komentarz PAXa</label>
