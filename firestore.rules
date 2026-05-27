@@ -19,8 +19,7 @@ service cloud.firestore {
         && (collection != 'jobs' || request.resource.data.author == request.auth.token.email);
 
       // Nikt nie kasuje zleceń (koszty, sezony, budżety - tak)
-      allow delete: if request.auth != null
-        && collection != 'jobs';
+      allow delete: if request.auth != null;
     }
   }
 }

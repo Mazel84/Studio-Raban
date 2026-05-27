@@ -25,8 +25,8 @@ export const Router = {
 export const Calendar = {
     currentDate: new Date(),
 
-    open: () => {
-        Calendar.currentDate = new Date();
+    open: (selectedDate = null) => {
+        Calendar.currentDate = selectedDate ? new Date(selectedDate) : new Date();
         Calendar.render(Calendar.currentDate);
         UI.openModal('modal-calendar');
     },

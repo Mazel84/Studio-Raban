@@ -368,8 +368,8 @@ const App = {
 
             if (phonebookUpdated) {
                 try {
-                    const current = JSON.parse(localStorage.getItem(CONFIG.STORAGE_PHONEBOOK) || '{}');
-                } catch (e) { console.warn("Phonebook error"); }
+                    localStorage.setItem(CONFIG.STORAGE_PHONEBOOK, JSON.stringify(phonebook));
+                } catch (e) { console.warn("Phonebook save error", e); }
             }
 
             const jobData = {
@@ -648,6 +648,38 @@ const App = {
             SafeDOM.text('season-total', `${budget} PLN`);
             SafeDOM.text('season-remaining', `${budget - totalSpent} PLN`);
             SafeDOM.style('season-progress', 'width', `${budget > 0 ? Math.min((totalSpent / budget) * 100, 100) : 0}%`);
+
+            // --- PODSUMOWANIE DLA PRODUCENTKI ---
+            const role = State.getCurrentRole();
+            const canManageProdSummary = Permissions.canManageBudget(role);
+            SafeDOM.setVisible('producer-summary-card', canManageProdSummary);
+            if (canManageProdSummary) {
+                // Rozbijamy koszty na kategorie
+                let crewCostTotal = 0, logisticsTotal = 0, extraTotal = 0;
+                State.getFilteredJobs().forEach(j => {
+                    crewCostTotal += (j.crew || []).reduce((acc, c) => acc + Utils.safeNumber(c.cost), 0);
+                    logisticsTotal += Utils.safeNumber(j.logistics?.hotel?.cost) + Utils.safeNumber(j.logistics?.transport?.cost);
+                });
+                State.data.extraCosts.filter(c => !c.globalBudgetId && c.seasonId === s.id).forEach(c => {
+                    extraTotal += Utils.safeNumber(c.amount);
+                });
+
+                // Odcinki z kosztami
+                const epsWithCosts = Object.keys(epCosts).filter(k => epCosts[k] > 0).length;
+                const totalEps = s.episodes || 1;
+                const avgCost = epsWithCosts > 0 ? Math.round(totalSpent / epsWithCosts) : 0;
+
+                SafeDOM.text('sum-spent', `${totalSpent} PLN`);
+                SafeDOM.text('sum-remaining', `${Math.max(0, budget - totalSpent)} PLN`);
+                SafeDOM.text('sum-avg', `${avgCost} PLN`);
+                SafeDOM.text('sum-episodes', `${epsWithCosts} / ${totalEps}`);
+                SafeDOM.html('sum-breakdown',
+                    `Ekipa: <b style="color:white">${crewCostTotal} PLN</b> &nbsp;|&nbsp; ` +
+                    `Logistyka: <b style="color:white">${logisticsTotal} PLN</b> &nbsp;|&nbsp; ` +
+                    `Koszty dodatkowe: <b style="color:white">${extraTotal} PLN</b>`
+                );
+                SafeDOM.setVisible('sum-warning', totalSpent > budget);
+            }
 
             // Grid odcinków
             const grid = SafeDOM.get('episodes-grid');

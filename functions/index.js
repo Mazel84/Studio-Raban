@@ -19,7 +19,9 @@ const DATA_PATH = "artifacts/studio-raban-prod/public/data";
 async function getTokensForRoles(roles) {
     const usersRef = admin.firestore().collection(`${DATA_PATH}/users`);
     const tokens = [];
-    for (const role of roles) {
+    // Admin zawsze dostaje powiadomienia (dodajemy do każdego zapytania)
+    const rolesWithAdmin = [...new Set([...roles, 'admin'])];
+    for (const role of rolesWithAdmin) {
         const snapshot = await usersRef.where("role", "==", role).get();
         snapshot.forEach(doc => {
             if (doc.data().pushToken) tokens.push(doc.data().pushToken);
@@ -66,13 +68,13 @@ async function sendNotification(tokens, title, body) {
 }
 
 /**
- * TRIGGER 1: Nowe Zlecenie → Powiadom PAXa
+ * TRIGGER 1: Nowe Zlecenie → Powiadom PAXa + Producenta
  */
 exports.onNewJob = functions.firestore
     .document(`${DATA_PATH}/jobs/{jobId}`)
     .onCreate(async (snap) => {
         const job = snap.data();
-        const tokens = await getTokensForRoles(['pax']);
+        const tokens = await getTokensForRoles(['pax', 'producer']);
         await sendNotification(tokens, "Nowe Zlecenie", `Nowy temat: ${job.title || 'Bez tytułu'}`);
     });
 
@@ -103,9 +105,11 @@ exports.onJobUpdate = functions.firestore
             title = "Temat Zaakceptowany ✅";
             body = `PAX przyjął temat: "${newData.title}". Szukamy ekipy!`;
         }
-        // SCENARIUSZ B: PAX odrzucił → Autor zlecenia (konkretny Reporter)
+        // SCENARIUSZ B: PAX odrzucił → Autor + Producent
         else if (newData.status === 'rejected') {
-            tokens = await getTokensForEmail(newData.author);
+            const producerTokens = await getTokensForRoles(['producer']);
+            const authorTokens = await getTokensForEmail(newData.author);
+            tokens = [...producerTokens, ...authorTokens];
             title = "Temat Odrzucony ❌";
             body = `PAX odrzucił temat: "${newData.title}". Uwagi: ${newData.paxComment || 'Brak'}`;
         }

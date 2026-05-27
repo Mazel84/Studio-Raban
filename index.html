@@ -328,7 +328,7 @@
                     </div>
                     <div class="input-group">
                         <label>Data Realizacji</label>
-                        <div class="input-field input-clickable" id="job-date-trigger" onclick="window.Calendar.open()">
+                        <div class="input-field input-clickable" id="job-date-trigger" onclick="window.Calendar.open(document.getElementById('job-date').value || null)">
                             <span id="job-date-display" style="color: var(--text-secondary);">Wybierz datę...</span>
                             <span class="material-symbols-outlined"
                                 style="font-size:20px; color: var(--brand-color);">calendar_today</span>
@@ -446,6 +446,34 @@
                     </div>
                     <div style="margin-top:8px; font-size:12px; color:var(--text-secondary); text-align:right;">
                         Pozostało: <span id="season-remaining" style="color:white; font-weight:600;">0 PLN</span>
+                    </div>
+                </div>
+                <div class="card hidden" id="producer-summary-card" style="border-color: var(--brand-color); background: linear-gradient(135deg, rgba(172, 50, 228, 0.08), rgba(13, 13, 18, 0.95));">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                        <span class="material-symbols-outlined" style="color:var(--brand-color);">analytics</span>
+                        <h3 style="margin:0;">📊 Podsumowanie dla Producentki</h3>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:14px; text-align:center;">
+                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Wydano</div>
+                            <div id="sum-spent" style="font-size:20px; font-weight:800; color:var(--ios-red);">0 PLN</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:14px; text-align:center;">
+                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Pozostało</div>
+                            <div id="sum-remaining" style="font-size:20px; font-weight:800; color:var(--ios-green);">0 PLN</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:14px; text-align:center;">
+                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Średnio/odcinek</div>
+                            <div id="sum-avg" style="font-size:20px; font-weight:800; color:white;">0 PLN</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:12px; padding:14px; text-align:center;">
+                            <div style="font-size:12px; color:var(--text-secondary); margin-bottom:4px;">Odcinki z kosztami</div>
+                            <div id="sum-episodes" style="font-size:20px; font-weight:800; color:var(--brand-color);">0 / 0</div>
+                        </div>
+                    </div>
+                    <div id="sum-breakdown" style="font-size:12px; color:var(--text-secondary); border-top:1px solid rgba(255,255,255,0.08); padding-top:12px;"></div>
+                    <div id="sum-warning" class="hidden" style="margin-top:12px; padding:10px 14px; background:rgba(255,69,58,0.12); border:1px solid var(--ios-red); border-radius:10px; font-size:13px; color:var(--ios-red); font-weight:600;">
+                        ⚠️ Przekroczono budżet sezonu! Skontaktuj się z produkcją.
                     </div>
                 </div>
                 <h3 style="margin-left: 4px; color:var(--text-secondary); margin-top:20px;">STATUS ODCINKÓW</h3>
